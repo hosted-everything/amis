@@ -712,7 +712,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
               parts[0] = parts[0].replace('.md', '');
 
               return (
-                'href=\\' + quota + '/amis' + parts.join('#') + '\\' + quota
+                'href=\\' + quota + '/mirror/amis' + parts.join('#') + '\\' + quota
               );
             }
 
@@ -737,7 +737,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
               if (parts[0][0] !== '/') {
                 parts[0] = path
                   .resolve(path.dirname(file.subpath), parts[0])
-                  .replace(/^\/docs/, '/amis');
+                  .replace(/^\/docs/, '/mirror/amis');
               }
 
               return 'href=\\' + quota + parts.join('#') + '\\' + quota;
@@ -765,7 +765,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
   let cfcAddress =
     'https://3xsw4ap8wah59.cfc-execute.bj.baidubce.com/api/amis-mock';
   if (process.env.IS_AISUDA) {
-    cfcAddress = '/amis/api';
+    cfcAddress = '/mirror/amis/api';
   }
 
   ghPages.match('/{examples,docs}/**', {
@@ -1056,7 +1056,7 @@ if (fis.project.currentMedia() === 'publish-sdk') {
     ]
   });
   ghPages.match('*', {
-    domain: '/amis',
+    domain: '/mirror/amis',
     deploy: [
       fis.plugin('skip-packed'),
       fis.plugin('local-deliver', {

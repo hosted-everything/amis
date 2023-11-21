@@ -35,6 +35,7 @@ var PROXY_THEME = process.env.PROXY_THEME
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/mirror/amis',
   plugins: [
     I18N && i18nPlugin(i18nConfig),
 
