@@ -10,10 +10,16 @@ export interface debounceConfig {
   leading?: boolean;
   trailing?: boolean;
 }
+
+export interface trackConfig {
+  id: string;
+  name: string;
+}
 // 事件监听器
 export interface EventListeners {
   [propName: string]: {
     debounce?: debounceConfig;
+    track?: trackConfig;
     weight?: number; // 权重
     actions: ListenerAction[]; // 执行的动作集
   };
@@ -26,6 +32,7 @@ export interface OnEventProps {
       weight?: number; // 权重
       actions: ListenerAction[]; // 执行的动作集,
       debounce?: debounceConfig;
+      track?: trackConfig;
     };
   };
 }
@@ -36,6 +43,7 @@ export interface RendererEventListener {
   type: string;
   weight: number;
   debounce: debounceConfig | null;
+  track: trackConfig | null;
   actions: ListenerAction[];
   executing?: boolean;
   debounceInstance?: any;
@@ -64,31 +72,50 @@ export function createRendererEvent<T extends RendererEventContext>(
   type: string,
   context: T
 ): RendererEvent<T> {
-  const rendererEvent = {
-    context: extendObject({pristineData: context.data}, context),
-    type,
-    prevented: false,
-    stoped: false,
-    preventDefault() {
-      rendererEvent.prevented = true;
-    },
+  const rendererEvent: RendererEvent<T> = Object.defineProperties(
+    {
+      context: extendObject({pristineData: context.data}, context),
+      type,
+      prevented: false,
+      stoped: false,
+      preventDefault() {
+        rendererEvent.prevented = true;
+      },
 
-    stopPropagation() {
-      rendererEvent.stoped = true;
-    },
+      stopPropagation() {
+        rendererEvent.stoped = true;
+      },
 
-    get data() {
-      return rendererEvent.context.data;
-    },
+      get data() {
+        return rendererEvent.context.data;
+      },
 
-    get pristineData() {
-      return rendererEvent.context.pristineData;
-    },
+      get pristineData() {
+        return rendererEvent.context.pristineData;
+      },
 
-    setData(data: any) {
-      rendererEvent.context.data = data;
+      setData(data: any) {
+        rendererEvent.context.data = data;
+      }
+    },
+    {
+      context: {
+        enumerable: false
+      },
+      pristineData: {
+        enumerable: false
+      },
+      preventDefault: {
+        enumerable: false
+      },
+      stopPropagation: {
+        enumerable: false
+      },
+      setData: {
+        enumerable: false
+      }
     }
-  };
+  );
   return rendererEvent;
 }
 
@@ -118,6 +145,7 @@ export const bindEvent = (renderer: any) => {
             renderer,
             type: key,
             debounce: listener.debounce || null,
+            track: listeners[key].track || null,
             weight: listener.weight || 0,
             actions: listener.actions
           });
@@ -127,6 +155,7 @@ export const bindEvent = (renderer: any) => {
           renderer,
           type: key,
           debounce: listeners[key].debounce || null,
+          track: listeners[key].track || null,
           weight: listeners[key].weight || 0,
           actions: listeners[key].actions
         });
@@ -243,6 +272,17 @@ export async function dispatchEvent(
     } else {
       await runActions(listener.actions, listener.renderer, rendererEvent);
       checkExecuted();
+    }
+
+    if (listener?.track) {
+      const {id: trackId, name: trackName} = listener.track;
+      renderer?.props?.env?.tracker({
+        eventType: listener.type,
+        eventData: {
+          trackId,
+          trackName
+        }
+      });
     }
 
     // 停止后续监听器执行

@@ -251,16 +251,14 @@ export function wrapControl<
               } else {
                 let initialValue = model.extraName
                   ? [
-                      store?.getValueByName(
-                        model.name,
-                        form?.canAccessSuperData
-                      ),
-                      store?.getValueByName(
+                      getVariable(data, model.name, form?.canAccessSuperData),
+                      getVariable(
+                        data,
                         model.extraName,
                         form?.canAccessSuperData
                       )
                     ]
-                  : store?.getValueByName(model.name, form?.canAccessSuperData);
+                  : getVariable(data, model.name, form?.canAccessSuperData);
 
                 if (
                   model.extraName &&
@@ -794,15 +792,16 @@ export function wrapControl<
           }
 
           getValue() {
-            const {formStore: data, $schema: control} = this.props;
+            const {formStore, data, $schema: control} = this.props;
             let value: any = this.model ? this.model.tmpValue : control.value;
 
             if (control.pipeIn) {
               value = callStrFunction.call(
                 this,
                 control.pipeIn,
-                ['value', 'data'],
+                ['value', 'store', 'data'],
                 value,
+                formStore,
                 data
               );
             }
@@ -868,9 +867,7 @@ export function wrapControl<
               formItem: this.model,
               formMode: control.mode || formMode,
               ref: this.controlRef,
-              data: model
-                ? model.getMergedData(data || store?.data)
-                : data || store?.data,
+              data: data || store?.data,
               name: model?.name ?? control.name,
               value,
               changeMotivation: model?.changeMotivation,
@@ -883,8 +880,8 @@ export function wrapControl<
               prinstine: model ? model.prinstine : undefined,
               setPrinstineValue: this.setPrinstineValue,
               onValidate: this.validate,
-              onFlushChange: this.flushChange,
-              render: this.renderChild // 如果覆盖，那么用的就是 form 上的 render，这个里面用到的 data 是比较旧的。
+              onFlushChange: this.flushChange
+              // render: this.renderChild // 如果覆盖，那么用的就是 form 上的 render，这个里面用到的 data 是比较旧的。
               // !没了这个， tree 里的 options 渲染会出问题
               // todo 理论上不应该影响，待确认
               // _filteredOptions: this.model?.filteredOptions

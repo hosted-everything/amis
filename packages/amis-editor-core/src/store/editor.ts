@@ -3,6 +3,7 @@ import {
   getVariable,
   mapObject,
   mapTree,
+  eachTree,
   extendObject,
   createObject
 } from 'amis-core';
@@ -54,6 +55,7 @@ import {EditorManagerConfig} from '../manager';
 import {EditorNode, EditorNodeType} from './node';
 import findIndex from 'lodash/findIndex';
 import {matchSorter} from 'match-sorter';
+import debounce from 'lodash/debounce';
 
 export interface SchemaHistory {
   versionId: number;
@@ -387,26 +389,7 @@ export const MainStore = types
         id: string,
         regionOrType?: string
       ): EditorNodeType | undefined {
-        let pool = self.root.children.concat();
-
-        while (pool.length) {
-          const item = pool.shift();
-          if (
-            item.id === id &&
-            (!regionOrType ||
-              item.region === regionOrType ||
-              item.type === regionOrType)
-          ) {
-            return item;
-          }
-
-          // 将当前节点的子节点全部放置到 pool中
-          if (item.children.length) {
-            pool.push.apply(pool, item.children);
-          }
-        }
-
-        return undefined;
+        return self.root.getNodeById(id, regionOrType);
       },
 
       get activeNodeInfo(): RendererInfo | null | undefined {
@@ -1043,6 +1026,15 @@ export const MainStore = types
     let doc: Document = document;
     let iframe: HTMLIFrameElement | undefined = undefined;
 
+    const lazyUpdateTargetName = debounce(
+      () => (self as any).updateTargetName(),
+      250,
+      {
+        leading: false,
+        trailing: true
+      }
+    );
+
     return {
       setLayer(value: any) {
         layer = value;
@@ -1110,10 +1102,15 @@ export const MainStore = types
             const host = path.reduce((schema, key) => {
               return schema[key];
             }, schema);
-            host[last] = host[last].map((item: any) => ({
-              ...item,
-              $$id: guid()
-            }));
+            host[last] = host[last].map((item: any) => {
+              if (isPlainObject(host[last])) {
+                return {
+                  ...item,
+                  $$id: guid()
+                };
+              }
+              return item;
+            });
           }
 
           self.schema = schema;
@@ -1122,7 +1119,7 @@ export const MainStore = types
         }
 
         this.resetHistory();
-        this.updateTargetName();
+        lazyUpdateTargetName();
       },
 
       insertSchema(event: PluginEvent<InsertEventContext>) {
@@ -1440,6 +1437,15 @@ export const MainStore = types
             noTrace
           );
         }
+      },
+
+      batchChangeValue(list: Array<{id: string; value: Schema}>) {
+        this.traceableSetSchema(
+          list.reduce((schema, item) => {
+            return JSONUpdate(schema, item.id, JSONPipeIn(item.value), true);
+          }, self.schema),
+          true
+        );
       },
 
       /**
@@ -1818,7 +1824,7 @@ export const MainStore = types
           schema: schema
         });
         self.schema = schema;
-        this.updateTargetName();
+        lazyUpdateTargetName();
       },
 
       undo() {
@@ -1830,7 +1836,7 @@ export const MainStore = types
           const version = self.schemaHistory[idx - 1];
           self.versionId = version.versionId;
           self.schema = version.schema;
-          this.updateTargetName();
+          lazyUpdateTargetName();
           this.autoSelectRoot();
         }
       },
@@ -1843,7 +1849,7 @@ export const MainStore = types
           const version = self.schemaHistory[idx + 1];
           self.versionId = version.versionId;
           self.schema = version.schema;
-          this.updateTargetName();
+          lazyUpdateTargetName();
           this.autoSelectRoot();
         }
       },
@@ -1931,6 +1937,10 @@ export const MainStore = types
       setAppCorpusData(data: any = {}) {
         self.appCorpusData = data;
         this.updateAppLocaleState();
+      },
+
+      beforeDestroy() {
+        lazyUpdateTargetName.cancel();
       }
     };
   });

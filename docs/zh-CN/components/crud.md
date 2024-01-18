@@ -204,14 +204,29 @@ CRUD 组件对数据源接口的数据结构要求如下：
 
 > `3.5.0`及以上版本
 
-`syncLocation`开启后，CRUD 在初始化数据域时，将会对 url 中的 Query 进行转换，将原始类型的字符串格式的转化为同位类型，目前仅支持**布尔类型**
+`syncLocation`开启后，CRUD 在初始化数据域时，将会对 url 中的 Query 进行转换，将原始类型的字符串格式的转化为同位类型。`3.6.0`版本后支持对象格式，该配置默认开启，且默认仅转化布尔值。
+
+#### ParsePrimitiveQueryOptions
+
+```typescript
+interface ParsePrimitiveQueryOptions {
+  parsePrimitiveQuery: {
+    enable: boolean;
+    types?: ('boolean' | 'number')[];
+  };
+}
+```
+
+比如开启设置 `{"parsePrimitiveQuery": {"enable": true, "types": ["boolean", "number"]}}` 后：
 
 ```
-"true"  ==> true
-"false" ==> false
+"true"   ==> true
+"false"  ==> false
+"123"    ==> 123
+"123.4"  ==> 123.4
 ```
 
-如果只想保持字符串格式，可以设置`"parsePrimitiveQuery": false`关闭该特性，具体效果参考[示例](../../../examples/crud/parse-primitive-query)。
+如果只想保持字符串格式，可以设置`"parsePrimitiveQuery": false` 或者 `"parsePrimitiveQuery": {"enable": false}` 关闭该特性，具体效果参考[示例](../../../examples/crud/parse-primitive-query)。如果想实现字段定制化转化类型，可以使用[配置 API 请求数据](../../docs/types/api#配置请求数据)，通过表达式控制接口传递的参数类型。
 
 ## 功能
 
@@ -958,11 +973,17 @@ Cards 模式支持 [Cards](./cards) 中的所有功能。
 
 可以在列上配置`"sortable": true`，该列表头右侧会渲染一个可点击的排序图标，可以切换`正序`和`倒序`。
 
+> 如果想默认就基于某个字段排序，可以结合 `defaultParams` 一起配置。
+
 ```schema: scope="body"
 {
     "type": "crud",
     "syncLocation": false,
     "api": "/api/mock2/sample",
+    "defaultParams": {
+      "orderBy": "engine",
+      "orderDir": "desc"
+    },
     "columns": [
         {
             "name": "id",
@@ -1006,6 +1027,36 @@ amis 只负责生成排序组件，并将排序参数传递给接口，而不会
             "name": "engine",
             "label": "Rendering engine",
             "searchable": true
+        }
+    ]
+}
+```
+
+也可以通过`searchable`来自定义搜索表单
+
+```schema: scope="body"
+{
+    "type": "crud",
+    "syncLocation": false,
+    "api": "/api/mock2/sample",
+    "columns": [
+        {
+            "name": "id",
+            "label": "ID"
+        },
+        {
+            "name": "engine",
+            "label": "Rendering engine",
+            "searchable": {
+              "type": "form",
+              "wrapWithPanel": false,
+              "body": [
+                {
+                  "type": "input-text",
+                  "name": "engine"
+                }
+              ]
+            }
         }
     ]
 }
@@ -1072,9 +1123,45 @@ amis 只负责生成下拉选择器组件，并将搜索参数传递给接口，
 
 你可以通过[数据映射](../../docs/concepts/data-mapping)，在`api`中获取这些参数。
 
+#### 快速过滤支持检索
+
+> 3.7.0 及以上版本
+
+通过配置 `searchable` 支持选项检索
+
+```schema: scope="body"
+{
+    "type": "crud",
+    "syncLocation": false,
+    "api": "/api/mock2/sample",
+    "columns": [
+        {
+            "name": "id",
+            "label": "ID"
+        },
+        {
+            "name": "grade",
+            "label": "CSS grade",
+            "filterable": {
+                "searchable": true,
+                "options": [
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "X"
+                ]
+            }
+        }
+    ]
+}
+```
+
+如果需要更细节的配置，可以使用 `searchConfig`，详细配置项参考 search-box 组件
+
 #### 下拉数据源
 
-过滤器的数据域支持API接口和上下文数据(`3.6.0`及以上版本)
+过滤器的数据域支持 API 接口和上下文数据(`3.6.0`及以上版本)
 
 ```schema
 {
@@ -1600,7 +1687,7 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 
 分页有两种模式：
 
-##### 1. 知道数据总数
+**1. 知道数据总数**
 
 如果后端可以知道数据总数时，接口返回格式如下：
 
@@ -1624,7 +1711,7 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 
 该模式下，会自动计算总页码数，渲染出有页码的分页组件
 
-##### 2. 不知道数据总数
+**2. 不知道数据总数**
 
 如果后端无法知道数据总数，那么可以返回`hasNext`字段，来标识是否有下一页。
 
@@ -1649,6 +1736,265 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 这样 amis 会在配置分页组件的地方，渲染出一个简单的页面跳转控件。
 
 > 如果总数据只够展示一页，则默认不显示该分页组件
+
+#### 前端分页
+
+如果你的数据并不是很大，而且后端不方便做分页和条件过滤操作，那么通过配置`loadDataOnce`实现前端一次性加载并支持分页和条件过滤操作。
+
+<div class="p-4 text-base text-gray-800 rounded-lg bg-gray-50" role="alert">
+  <span class="font-medium text-gray-800 block">温馨提示</span>
+  <span class="block">开启<code>loadDataOnce</code>后，搜索和过滤将交给组件处理，默认对所有字段采用模糊匹配（比如：<code>mi</code>将会匹配<code>amis</code>）。如果首次加载数据时设置了预设条件，导致接口返回的数据集合未按照此规则过滤，则可能导致切换页码后分页错误。此时有2种方案处理：</span>
+  <span class="block" style="text-indent: 2em">1. 将接口返回的列表数据按照所有字段模糊匹配的规则处理</span>
+  <span class="block" style="text-indent: 2em">2. 配置<a href="#匹配函数"><code>matchFunc</code></a>，自定义处理过滤</span>
+</div>
+
+```schema: scope="body"
+{
+    "type": "crud",
+    "syncLocation": false,
+    "api": "/api/mock2/sample",
+    "loadDataOnce": true,
+    "columns": [
+        {
+            "name": "id",
+            "label": "ID"
+        },
+        {
+            "name": "engine",
+            "label": "Rendering engine"
+        },
+        {
+            "name": "browser",
+            "label": "Browser"
+        },
+        {
+            "name": "platform",
+            "label": "Platform(s)"
+        },
+        {
+            "name": "version",
+            "label": "Engine version"
+        },
+        {
+            "name": "grade",
+            "label": "CSS grade",
+            "sortable": true
+        }
+    ]
+}
+```
+
+配置一次性加载后，基本的分页、快速排序操作将会在前端进行完成。如果想实现前端检索(目前是模糊搜索)，可以在 table 的 `columns` 对应项配置 `searchable` 来实现。
+
+```schema: scope="body"
+{
+    "type": "crud",
+    "syncLocation": false,
+    "api": "/api/mock2/sample",
+    "loadDataOnce": true,
+    "columns": [
+        {
+            "name": "id",
+            "label": "ID"
+        },
+        {
+            "name": "engine",
+            "label": "Rendering engine"
+        },
+        {
+            "name": "browser",
+            "label": "Browser"
+        },
+        {
+            "name": "platform",
+            "label": "Platform(s)"
+        },
+        {
+            "name": "version",
+            "label": "Engine version",
+            "searchable": {
+                "type": "select",
+                "name": "version",
+                "label": "Engine version",
+                "clearable": true,
+                "multiple": true,
+                "searchable": true,
+                "checkAll": true,
+                "options": ["1.7", "3.3", "5.6"],
+                "maxTagCount": 10,
+                "extractValue": true,
+                "joinValues": false,
+                "delimiter": ',',
+                "defaultCheckAll": false,
+                "checkAllLabel": "全选"
+              }
+        },
+        {
+            "name": "grade",
+            "label": "CSS grade"
+        }
+    ]
+}
+```
+
+> **注意：**如果你的数据量较大，请务必使用服务端分页的方案，过多的前端数据展示，会显著影响前端页面的性能
+
+另外前端一次性加载当有查寻条件的时候，默认还是会重新请求一次，如果配置 `loadDataOnceFetchOnFilter` 为 `false` 则为前端过滤。
+
+```schema: scope="body"
+{
+  "type": "crud",
+  "syncLocation": false,
+  "api": "/api/mock2/sample",
+  "loadDataOnce": true,
+  "loadDataOnceFetchOnFilter": false,
+  "autoGenerateFilter": true,
+  "columns": [
+    {
+      "name": "id",
+      "label": "ID"
+    },
+    {
+      "name": "engine",
+      "label": "Rendering engine"
+    },
+    {
+      "name": "browser",
+      "label": "Browser"
+    },
+    {
+      "name": "platform",
+      "label": "Platform(s)"
+    },
+    {
+      "name": "version",
+      "label": "Engine version",
+      "searchable": {
+        "type": "select",
+        "name": "version",
+        "label": "Engine version",
+        "clearable": true,
+        "multiple": true,
+        "searchable": true,
+        "checkAll": true,
+        "options": [
+          "1.7",
+          "3.3",
+          "5.6"
+        ],
+        "maxTagCount": 10,
+        "extractValue": true,
+        "joinValues": false,
+        "delimiter": ",",
+        "defaultCheckAll": false,
+        "checkAllLabel": "全选"
+      }
+    },
+    {
+      "name": "grade",
+      "label": "CSS grade"
+    }
+  ]
+}
+```
+
+`loadDataOnceFetchOnFilter` 配置成 `true` 则会强制重新请求接口比如以下用法
+
+> 此时如果不配置或者配置为 `false` 是前端直接过滤，不过记得配置 name 为行数据中的属性，如果行数据中没有对应属性则不会起作用
+
+```schema: scope="body"
+{
+  "type": "crud",
+  "syncLocation": false,
+  "api": "/api/mock2/sample",
+  "loadDataOnce": true,
+  "loadDataOnceFetchOnFilter": true,
+  "headerToolbar": [
+    {
+      "type": "search-box",
+      "name": "keywords"
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "label": "ID"
+    },
+    {
+      "name": "engine",
+      "label": "Rendering engine"
+    },
+    {
+      "name": "browser",
+      "label": "Browser"
+    },
+    {
+      "name": "platform",
+      "label": "Platform(s)"
+    },
+    {
+      "name": "version",
+      "label": "Engine version",
+      "searchable": {
+        "type": "select",
+        "name": "version",
+        "label": "Engine version",
+        "clearable": true,
+        "multiple": true,
+        "searchable": true,
+        "checkAll": true,
+        "options": [
+          "1.7",
+          "3.3",
+          "5.6"
+        ],
+        "maxTagCount": 10,
+        "extractValue": true,
+        "joinValues": false,
+        "delimiter": ",",
+        "defaultCheckAll": false,
+        "checkAllLabel": "全选"
+      }
+    },
+    {
+      "name": "grade",
+      "label": "CSS grade"
+    }
+  ]
+}
+```
+
+##### 匹配函数
+
+> `3.5.0` 及以上版本
+
+支持自定义匹配函数`matchFunc`，当开启`loadDataOnce`时，会基于该函数计算的匹配结果进行过滤，主要用于处理列字段类型较为复杂或者字段值格式和后端返回不一致的场景，函数签名如下：
+
+```typescript
+interface CRUDMatchFunc {
+  (
+    /* 当前列表的全量数据 */
+    items: any,
+    /* 最近一次接口返回的全量数据 */
+    itemsRaw: any,
+    /** 相关配置 */
+    options?: {
+      /* 查询参数 */
+      query: Record<string, any>;
+      /* 列配置 */
+      columns: any;
+      /** match-sorter 匹配函数 */
+      matchSorter: (
+        items: any[],
+        value: string,
+        options?: MatchSorterOptions<any>
+      ) => any[];
+    }
+  ): boolean;
+}
+```
+
+具体效果请参考[示例](../../../examples/crud/match-func)，从`3.6.0`版本开始，`options`中支持使用`matchSorter`函数处理复杂的过滤场景，比如前缀匹配、模糊匹配等，更多详细内容推荐查看[match-sorter](https://github.com/kentcdodds/match-sorter)。
 
 ### 批量操作
 
@@ -1750,75 +2096,220 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 
 **保留条目选择**
 
-默认分页、搜素后，用户选择条目会被清空，配置`keepItemSelectionOnPageChange`属性后会保留用户选择，可以实现跨页面批量操作。
+默认分页、搜索后，用户选择条目会被清空，配置`keepItemSelectionOnPageChange`属性后会保留用户选择，可以实现跨页面批量操作。
 同时可以通过配置`maxKeepItemSelectionLength`属性限制最大勾选数
 
 ```schema: scope="body"
 {
-    "type": "crud",
-    "syncLocation": false,
-    "api": "/api/mock2/sample",
-    "headerToolbar": [
-        "bulkActions"
-    ],
-    "keepItemSelectionOnPageChange": true,
-    "maxKeepItemSelectionLength": 4,
-    "bulkActions": [
-        {
-            "label": "批量删除",
-            "actionType": "ajax",
-            "api": "delete:/api/mock2/sample/${ids|raw}",
-            "confirmText": "确定要批量删除?"
-        },
-        {
-            "label": "批量修改",
-            "actionType": "dialog",
-            "dialog": {
-                "title": "批量编辑",
-                "body": {
-                    "type": "form",
-                    "api": "/api/mock2/sample/bulkUpdate2",
-                    "body": [
-                        {
-                            "type": "hidden",
-                            "name": "ids"
-                        },
-                        {
-                            "type": "input-text",
-                            "name": "engine",
-                            "label": "Engine"
-                        }
-                    ]
-                }
+  "type": "crud",
+  "syncLocation": false,
+  "api": "/api/mock2/sample",
+  "headerToolbar": [
+    "bulkActions"
+  ],
+  "keepItemSelectionOnPageChange": true,
+  "maxKeepItemSelectionLength": 4,
+  "bulkActions": [
+    {
+      "label": "批量删除",
+      "actionType": "ajax",
+      "api": "delete:/api/mock2/sample/${ids|raw}",
+      "confirmText": "确定要批量删除?"
+    },
+    {
+      "label": "批量修改",
+      "actionType": "dialog",
+      "dialog": {
+        "title": "批量编辑",
+        "body": {
+          "type": "form",
+          "api": "/api/mock2/sample/bulkUpdate2",
+          "body": [
+            {
+              "type": "hidden",
+              "name": "ids"
+            },
+            {
+              "type": "input-text",
+              "name": "engine",
+              "label": "Engine"
             }
+          ]
         }
-    ],
-    "columns": [
-        {
-            "name": "id",
-            "label": "ID"
-        },
-        {
-            "name": "engine",
-            "label": "Rendering engine"
-        },
-        {
-            "name": "browser",
-            "label": "Browser"
-        },
-        {
-            "name": "platform",
-            "label": "Platform(s)"
-        },
-        {
-            "name": "version",
-            "label": "Engine version"
-        },
-        {
-            "name": "grade",
-            "label": "CSS grade"
+      }
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "label": "ID"
+    },
+    {
+      "name": "engine",
+      "label": "Rendering engine"
+    },
+    {
+      "name": "browser",
+      "label": "Browser"
+    },
+    {
+      "name": "platform",
+      "label": "Platform(s)"
+    },
+    {
+      "name": "version",
+      "label": "Engine version"
+    },
+    {
+      "name": "grade",
+      "label": "CSS grade"
+    }
+  ]
+}
+```
+
+**当前页最大勾选数**
+
+如果不需要在分页、搜索后，保留用户选择，即不需要配置`keepItemSelectionOnPageChange`，可以通过配置`maxItemSelectionLength`属性限制当前页条目的最大勾选数
+
+```schema: scope="body"
+{
+  "type": "crud",
+  "syncLocation": false,
+  "api": "/api/mock2/sample",
+  "headerToolbar": [
+    "bulkActions"
+  ],
+  "maxItemSelectionLength": 4,
+  "bulkActions": [
+    {
+      "label": "批量删除",
+      "actionType": "ajax",
+      "api": "delete:/api/mock2/sample/${ids|raw}",
+      "confirmText": "确定要批量删除?"
+    },
+    {
+      "label": "批量修改",
+      "actionType": "dialog",
+      "dialog": {
+        "title": "批量编辑",
+        "body": {
+          "type": "form",
+          "api": "/api/mock2/sample/bulkUpdate2",
+          "body": [
+            {
+              "type": "hidden",
+              "name": "ids"
+            },
+            {
+              "type": "input-text",
+              "name": "engine",
+              "label": "Engine"
+            }
+          ]
         }
-    ]
+      }
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "label": "ID"
+    },
+    {
+      "name": "engine",
+      "label": "Rendering engine"
+    },
+    {
+      "name": "browser",
+      "label": "Browser"
+    },
+    {
+      "name": "platform",
+      "label": "Platform(s)"
+    },
+    {
+      "name": "version",
+      "label": "Engine version"
+    },
+    {
+      "name": "grade",
+      "label": "CSS grade"
+    }
+  ],
+  "itemCheckableOn": "this.index !== 2"
+}
+```
+
+`maxItemSelectionLength`也可以和`keepItemSelectionOnPageChange`搭配使用，起到和`maxKeepItemSelectionLength`一样的效果
+
+```schema: scope="body"
+{
+  "type": "crud",
+  "syncLocation": false,
+  "api": "/api/mock2/sample",
+  "headerToolbar": [
+    "bulkActions"
+  ],
+  "keepItemSelectionOnPageChange": true,
+  "maxItemSelectionLength": 4,
+  "bulkActions": [
+    {
+      "label": "批量删除",
+      "actionType": "ajax",
+      "api": "delete:/api/mock2/sample/${ids|raw}",
+      "confirmText": "确定要批量删除?"
+    },
+    {
+      "label": "批量修改",
+      "actionType": "dialog",
+      "dialog": {
+        "title": "批量编辑",
+        "body": {
+          "type": "form",
+          "api": "/api/mock2/sample/bulkUpdate2",
+          "body": [
+            {
+              "type": "hidden",
+              "name": "ids"
+            },
+            {
+              "type": "input-text",
+              "name": "engine",
+              "label": "Engine"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "columns": [
+    {
+      "name": "id",
+      "label": "ID"
+    },
+    {
+      "name": "engine",
+      "label": "Rendering engine"
+    },
+    {
+      "name": "browser",
+      "label": "Browser"
+    },
+    {
+      "name": "platform",
+      "label": "Platform(s)"
+    },
+    {
+      "name": "version",
+      "label": "Engine version"
+    },
+    {
+      "name": "grade",
+      "label": "CSS grade"
+    }
+  ],
+  "itemCheckableOn": "this.index !== 2 && this.index !== 5"
 }
 ```
 
@@ -1974,6 +2465,8 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 
 在`headerToolbar`或者`footerToolbar`数组中添加`export-csv`字符串，可以实现点击下载 CSV 的功能，注意这里只包括当前分页的数据，要下载全部数据需要通过后端 API 实现。
 
+> 注意：导出 CSV 时，默认使用 CRUD 的接口数据，不导出「操作」列
+
 ```schema: scope="body"
 {
     "type": "crud",
@@ -2126,6 +2619,8 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 1. 导出 CSV 是将 api 返回数据导出，表头是数据里的 key，而 Excel 的表头使用的是 label。
 2. 导出 Excel 更重视展现一致，支持合并单元格、链接、mapping 映射、图片（需要加[跨域 Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)）。
 3. 导出 Excel 只在 `mode` 为 `table` 时能用。
+
+> 注意：导出 Excel 时，默认不导出「操作」列
 
 ```schema: scope="body"
 {
@@ -2454,6 +2949,49 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
             "name": "grade",
             "label": "CSS grade"
         }
+    ]`
+}
+```
+
+### 导出 Excel 模板
+
+> 6.1 及以上版本
+
+配置是 `export-excel-template` 和前面 `export-excel` 不同，这个功能只导出表头，主要用于线下填数据，可以配合 input-excel 组件来上传填好的内容。
+
+```schema: scope="body"
+{
+    "type": "crud",
+    "syncLocation": false,
+    "headerToolbar": [{
+        "type": "export-excel-template",
+        "label": "导出 Excel 模板",
+    }],
+    "columns": [
+        {
+            "name": "id",
+            "label": "ID"
+        },
+        {
+            "name": "engine",
+            "label": "Rendering engine"
+        },
+        {
+            "name": "browser",
+            "label": "Browser"
+        },
+        {
+            "name": "platform",
+            "label": "Platform(s)"
+        },
+        {
+            "name": "version",
+            "label": "Engine version"
+        },
+        {
+            "name": "grade",
+            "label": "CSS grade"
+        }
     ]
 }
 ```
@@ -2608,36 +3146,235 @@ crud 组件支持通过配置`headerToolbar`和`footerToolbar`属性，实现在
 }
 ```
 
-它其实是个简化的 `button` 组件，可以参考 `button` 组件的文档做调整。`reload`支持两种触发方式：
+它其实是个简化的 `button` 组件，可以参考 `button` 组件的文档做调整。
 
-- `"type": "reload"`，CRUD 内置的方法
-- `{"actionType": "reload", "target": "targetName"}`，动作触发
+#### 刷新 CRUD 触发方式
+
+触发 CRUD 刷新的方式有 3 种：
+
+1. **reload 类型按钮**：使用`{"type": "reload", ...}`，CRUD 内部会对点击事件做处理
+2. **reload 动作按钮**：使用`{"type": "action", "actionType": "reload", "target": "targetName", ...}`，指定`target`为要刷新的 CRUD 组件的`name`
+3. **reload 事件动作**：使用[事件动作](../../docs/concepts/event-action)，指定`id`为要刷新的 CRUD 组件的`id`
+
+```schema
+{
+  "type": "page",
+  "body": [
+    {
+      "type": "button",
+      "icon": "iconfont icon-refresh",
+      "tooltip": "",
+      "label": "CRUD外层按钮",
+      "level": "enhance",
+      "onEvent": {
+        "click": {
+          "weight": 0,
+          "actions": [
+            {
+              "componentId": "crudId",
+              "ignoreError": false,
+              "actionType": "reload",
+              "dataMergeMode": "override",
+              "data": {
+              },
+              "args": {
+                "resetPage": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "crud",
+      "name": "crudName",
+      "id": "crudId",
+      "syncLocation": false,
+      "api": "/api/mock2/crud/table",
+      "headerToolbar": [
+        "bulkActions",
+        {
+          "type": "reload",
+          "align": "right",
+          "icon": "iconfont icon-refresh",
+          "label": "刷新(type)",
+          "tooltip": "",
+          "level": "primary"
+        },
+        {
+          "type": "action",
+          "align": "right",
+          "icon": "iconfont icon-refresh",
+          "label": "刷新(actionType)",
+          "tooltip": "",
+          "level": "primary",
+          "actionType": "reload",
+          "target": "crudName"
+        },
+        {
+          "type": "button",
+          "align": "right",
+          "icon": "iconfont icon-refresh",
+          "tooltip": "",
+          "label": "事件动作(onEvent)",
+          "level": "primary",
+          "onEvent": {
+            "click": {
+              "weight": 0,
+              "actions": [
+                {
+                  "componentId": "crudId",
+                  "groupType": "component",
+                  "actionType": "reload",
+                  "dataMergeMode": "override"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bulkActions": [
+        {
+          "label": "批量删除",
+          "actionType": "ajax",
+          "api": "delete:/api/mock2/sample/${ids|raw}",
+          "confirmText": "确定要批量删除?"
+        },
+        {
+          "label": "批量修改",
+          "actionType": "dialog",
+          "dialog": {
+            "title": "批量编辑",
+            "body": {
+              "type": "form",
+              "api": "/api/mock2/sample/bulkUpdate2",
+              "body": [
+                {
+                  "type": "hidden",
+                  "name": "ids"
+                },
+                {
+                  "type": "input-text",
+                  "name": "engine",
+                  "label": "Engine"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "columns": [
+          {
+              "name": "id",
+              "label": "ID"
+          },
+          {
+              "name": "engine",
+              "label": "Rendering engine"
+          },
+          {
+              "name": "browser",
+              "label": "Browser"
+          },
+          {
+              "name": "platform",
+              "label": "Platform(s)"
+          },
+          {
+              "name": "version",
+              "label": "Engine version"
+          },
+          {
+              "name": "grade",
+              "label": "CSS grade"
+          }
+      ]
+  }
+  ]
+}
+```
+
+刷新后默认会重置当前已选行数据，即使设置了 `keepItemSelectionOnPageChange` 为 `true`，也会重置。
 
 ```schema: scope="body"
 {
     "type": "crud",
-    "name": "crud",
+    "name": "crudName",
+    "id": "crudId",
     "syncLocation": false,
-    "api": "/api/mock2/sample",
+    "api": "/api/mock2/crud/table",
+    "keepItemSelectionOnPageChange": true,
     "headerToolbar": [
-        {
-            "type": "action",
-            "align": "right",
-            "icon": "iconfont icon-refresh",
-            "label": "刷新(actionType)",
-            "tooltip": "",
-            "level": "primary",
-            "actionType": 'reload',
-            "target": 'crud'
-        },
-        {
-            "type": "reload",
-            "align": "right",
-            "icon": "iconfont icon-refresh",
-            "label": "刷新(type)",
-            "tooltip": "",
-            "level": "primary"
+      "bulkActions",
+      {
+        "type": "reload",
+        "align": "right",
+        "icon": "iconfont icon-refresh",
+        "label": "刷新(type)",
+        "tooltip": "",
+        "level": "primary"
+      },
+      {
+        "type": "action",
+        "align": "right",
+        "icon": "iconfont icon-refresh",
+        "label": "刷新(actionType)",
+        "tooltip": "",
+        "level": "primary",
+        "actionType": "reload",
+        "target": "crudName"
+      },
+      {
+        "type": "button",
+        "align": "right",
+        "icon": "iconfont icon-refresh",
+        "tooltip": "",
+        "label": "事件动作(onEvent)",
+        "level": "primary",
+        "onEvent": {
+          "click": {
+            "weight": 0,
+            "actions": [
+              {
+                "componentId": "crudId",
+                "groupType": "component",
+                "actionType": "reload",
+                "dataMergeMode": "override"
+              }
+            ]
+          }
         }
+      }
+    ],
+    "bulkActions": [
+      {
+        "label": "批量删除",
+        "actionType": "ajax",
+        "api": "delete:/api/mock2/sample/${ids|raw}",
+        "confirmText": "确定要批量删除?"
+      },
+      {
+        "label": "批量修改",
+        "actionType": "dialog",
+        "dialog": {
+          "title": "批量编辑",
+          "body": {
+            "type": "form",
+            "api": "/api/mock2/sample/bulkUpdate2",
+            "body": [
+              {
+                "type": "hidden",
+                "name": "ids"
+              },
+              {
+                "type": "input-text",
+                "name": "engine",
+                "label": "Engine"
+              }
+            ]
+          }
+        }
+      }
     ],
     "columns": [
         {
@@ -2928,252 +3665,6 @@ CRUD 中不限制有多少个单条操作、添加一个操作对应的添加一
 
 `syncLocation`开启后，数据域经过地址栏同步后，原始值被转化为字符串同步回数据域，但布尔值（boolean）同步后不符合预期数据结构，导致组件渲染出错。比如查询条件表单中包含[Checkbox](./form/checkbox)组件，此时可以设置`{"trueValue": "1", "falseValue": "0"}`，将真值和假值设置为字符串格式规避。从`3.5.0`版本开始，已经支持[`parsePrimitiveQuery`](#解析query原始类型)，该配置默认开启。
 
-## 前端一次性加载
-
-如果你的数据并不是很大，而且后端不方便做分页和条件过滤操作，那么通过配置`loadDataOnce`实现前端一次性加载并支持分页和条件过滤操作。
-
-```schema: scope="body"
-{
-    "type": "crud",
-    "syncLocation": false,
-    "api": "/api/mock2/sample",
-    "loadDataOnce": true,
-    "columns": [
-        {
-            "name": "id",
-            "label": "ID"
-        },
-        {
-            "name": "engine",
-            "label": "Rendering engine"
-        },
-        {
-            "name": "browser",
-            "label": "Browser"
-        },
-        {
-            "name": "platform",
-            "label": "Platform(s)"
-        },
-        {
-            "name": "version",
-            "label": "Engine version"
-        },
-        {
-            "name": "grade",
-            "label": "CSS grade",
-            "sortable": true
-        }
-    ]
-}
-```
-
-配置一次性加载后，基本的分页、快速排序操作将会在前端进行完成。如果想实现前端检索(目前是模糊搜索)，可以在 table 的 `columns` 对应项配置 `searchable` 来实现。
-
-```schema: scope="body"
-{
-    "type": "crud",
-    "syncLocation": false,
-    "api": "/api/mock2/sample",
-    "loadDataOnce": true,
-    "columns": [
-        {
-            "name": "id",
-            "label": "ID"
-        },
-        {
-            "name": "engine",
-            "label": "Rendering engine"
-        },
-        {
-            "name": "browser",
-            "label": "Browser"
-        },
-        {
-            "name": "platform",
-            "label": "Platform(s)"
-        },
-        {
-            "name": "version",
-            "label": "Engine version",
-            "searchable": {
-                "type": "select",
-                "name": "version",
-                "label": "Engine version",
-                "clearable": true,
-                "multiple": true,
-                "searchable": true,
-                "checkAll": true,
-                "options": ["1.7", "3.3", "5.6"],
-                "maxTagCount": 10,
-                "extractValue": true,
-                "joinValues": false,
-                "delimiter": ',',
-                "defaultCheckAll": false,
-                "checkAllLabel": "全选"
-              }
-        },
-        {
-            "name": "grade",
-            "label": "CSS grade"
-        }
-    ]
-}
-```
-
-> **注意：**如果你的数据量较大，请务必使用服务端分页的方案，过多的前端数据展示，会显著影响前端页面的性能
-
-另外前端一次性加载当有查寻条件的时候，默认还是会重新请求一次，如果配置 `loadDataOnceFetchOnFilter` 为 `false` 则为前端过滤。
-
-```schema: scope="body"
-{
-  "type": "crud",
-  "syncLocation": false,
-  "api": "/api/mock2/sample",
-  "loadDataOnce": true,
-  "loadDataOnceFetchOnFilter": false,
-  "autoGenerateFilter": true,
-  "columns": [
-    {
-      "name": "id",
-      "label": "ID"
-    },
-    {
-      "name": "engine",
-      "label": "Rendering engine"
-    },
-    {
-      "name": "browser",
-      "label": "Browser"
-    },
-    {
-      "name": "platform",
-      "label": "Platform(s)"
-    },
-    {
-      "name": "version",
-      "label": "Engine version",
-      "searchable": {
-        "type": "select",
-        "name": "version",
-        "label": "Engine version",
-        "clearable": true,
-        "multiple": true,
-        "searchable": true,
-        "checkAll": true,
-        "options": [
-          "1.7",
-          "3.3",
-          "5.6"
-        ],
-        "maxTagCount": 10,
-        "extractValue": true,
-        "joinValues": false,
-        "delimiter": ",",
-        "defaultCheckAll": false,
-        "checkAllLabel": "全选"
-      }
-    },
-    {
-      "name": "grade",
-      "label": "CSS grade"
-    }
-  ]
-}
-```
-
-`loadDataOnceFetchOnFilter` 配置成 `true` 则会强制重新请求接口比如以下用法
-
-> 此时如果不配置或者配置为 `false` 是前端直接过滤，不过记得配置 name 为行数据中的属性，如果行数据中没有对应属性则不会起作用
-
-```schema: scope="body"
-{
-  "type": "crud",
-  "syncLocation": false,
-  "api": "/api/mock2/sample",
-  "loadDataOnce": true,
-  "loadDataOnceFetchOnFilter": true,
-  "headerToolbar": [
-    {
-      "type": "search-box",
-      "name": "keywords"
-    }
-  ],
-  "columns": [
-    {
-      "name": "id",
-      "label": "ID"
-    },
-    {
-      "name": "engine",
-      "label": "Rendering engine"
-    },
-    {
-      "name": "browser",
-      "label": "Browser"
-    },
-    {
-      "name": "platform",
-      "label": "Platform(s)"
-    },
-    {
-      "name": "version",
-      "label": "Engine version",
-      "searchable": {
-        "type": "select",
-        "name": "version",
-        "label": "Engine version",
-        "clearable": true,
-        "multiple": true,
-        "searchable": true,
-        "checkAll": true,
-        "options": [
-          "1.7",
-          "3.3",
-          "5.6"
-        ],
-        "maxTagCount": 10,
-        "extractValue": true,
-        "joinValues": false,
-        "delimiter": ",",
-        "defaultCheckAll": false,
-        "checkAllLabel": "全选"
-      }
-    },
-    {
-      "name": "grade",
-      "label": "CSS grade"
-    }
-  ]
-}
-```
-
-### 匹配函数
-
-> `3.5.0` 及以上版本
-
-支持自定义匹配函数`matchFunc`，当开启`loadDataOnce`时，会基于该函数计算的匹配结果进行过滤，主要用于处理列字段类型较为复杂或者字段值格式和后端返回不一致的场景，函数签名如下：
-
-```typescript
-interface CRUDMatchFunc {
-  (
-    /* 当前列表的全量数据 */
-    items: any,
-    /* 最近一次接口返回的全量数据 */
-    itemsRaw: any,
-    /** 相关配置 */
-    options?: {
-      /* 查询参数 */
-      query: Record<string, any>;
-      /* 列配置 */
-      columns: any;
-    }
-  ): boolean;
-}
-```
-
-具体效果请参考[示例](../../../examples/crud/match-func)。
-
 ## 动态列
 
 > since 1.1.6
@@ -3355,17 +3846,21 @@ itemAction 里的 onClick 还能通过 `data` 参数拿到当前行的数据，�
 | hideQuickSaveBtn                      | `boolean`                                                                               | `false`                         | 隐藏顶部快速保存提示                                                                                                                           |
 | autoJumpToTopOnPagerChange            | `boolean`                                                                               | `false`                         | 当切分页的时候，是否自动跳顶部。                                                                                                               |
 | syncResponse2Query                    | `boolean`                                                                               | `true`                          | 将返回数据同步到过滤器上。                                                                                                                     |
-| keepItemSelectionOnPageChange         | `boolean`                                                                               | `true`                          | 保留条目选择，默认分页、搜素后，用户选择条目会被清空，开启此选项后会保留用户选择，可以实现跨页面批量操作。                                     |
+| keepItemSelectionOnPageChange         | `boolean`                                                                               | `true`                          | 保留条目选择，默认分页、搜索后，用户选择条目会被清空，开启此选项后会保留用户选择，可以实现跨页面批量操作。                                     |
 | labelTpl                              | `string`                                                                                |                                 | 单条描述模板，`keepItemSelectionOnPageChange`设置为`true`后会把所有已选择条目列出来，此选项可以用来定制条目展示文案。                          |
+| maxKeepItemSelectionLength            | `number`                                                                                | `true`                          | 和`keepItemSelectionOnPageChange`搭配使用，限制最大勾选数。                                                                                    |
+| maxItemSelectionLength                | `number`                                                                                | `true`                          | 可单独使用限制当前页的最大勾选数，也可以和`keepItemSelectionOnPageChange`搭配使用达到和 maxKeepItemSelectionLength 一样的效果。                |
 | headerToolbar                         | Array                                                                                   | `['bulkActions', 'pagination']` | 顶部工具栏配置                                                                                                                                 |
 | footerToolbar                         | Array                                                                                   | `['statistics', 'pagination']`  | 底部工具栏配置                                                                                                                                 |
 | alwaysShowPagination                  | `boolean`                                                                               | `false`                         | 是否总是显示分页                                                                                                                               |
 | affixHeader                           | `boolean`                                                                               | `true`                          | 是否固定表头(table 下)                                                                                                                         |
+| affixFooter                           | `boolean`                                                                               | `false`                         | 是否固定表格底部工具栏                                                                                                                         |
 | autoGenerateFilter                    | `Object \| boolean`                                                                     |                                 | 是否开启查询区域，开启后会根据列元素的 `searchable` 属性值，自动生成查询条件表单                                                               |
 | resetPageAfterAjaxItemAction          | `boolean`                                                                               | `false`                         | 单条数据 ajax 操作后是否重置页码为第一页                                                                                                       |
 | autoFillHeight                        | `boolean` 丨 `{height: number}`                                                         |                                 | 内容区域自适应高度                                                                                                                             |
 | canAccessSuperData                    | `boolean`                                                                               | `true`                          | 指定是否可以自动获取上层的数据并映射到表格行数据上，如果列也配置了该属性，则列的优先级更高                                                     |
 | matchFunc                             | `string`                                                                                | [`CRUDMatchFunc`](#匹配函数)    | 自定义匹配函数, 当开启`loadDataOnce`时，会基于该函数计算的匹配结果进行过滤，主要用于处理列字段类型较为复杂或者字段值格式和后端返回不一致的场景 | `3.5.0` |
+| parsePrimitiveQuery                   | [`ParsePrimitiveQueryOptions`](#ParsePrimitiveQueryOptions)                             | `true`                          | 是否开启 Query 信息转换，开启后将会对 url 中的 Query 进行转换，默认开启，默认仅转化布尔值                                                      | `3.6.0` |
 
 注意除了上面这些属性，CRUD 在不同模式下的属性需要参考各自的文档，比如
 
@@ -3377,32 +3872,33 @@ itemAction 里的 onClick 还能通过 `data` 参数拿到当前行的数据，�
 
 除了 Table 组件默认支持的列配置，CRUD 的列配置还额外支持以下属性：
 
-| 属性名             | 类型                                                            | 默认值  | 说明                                                                        | 版本 |
-| ------------------ | --------------------------------------------------------------- | ------- | --------------------------------------------------------------------------- | --- |
-| sortable           | `boolean`                                                       | `false` | 是否可排序                                                                  |
-| searchable         | `boolean` \| `Schema`                                           | `false` | 是否可快速搜索，开启`autoGenerateFilter`后，`searchable`支持配置`Schema`    |
-| filterable         | `boolean` \| [`QuickFilterConfig`](./crud.md#quickfilterconfig) | `false` | 是否可快速搜索，`options`属性为静态选项，支持设置`source`属性从接口获取选项 |
-| quickEdit          | `boolean` \| [`QuickEditConfig`](./crud.md#quickeditconfig)     | -       | 快速编辑，一般需要配合`quickSaveApi`接口使用                                |
-| quickEditEnabledOn | `SchemaExpression`                                              | -       | 开启快速编辑条件[表达式](../../docs/concepts/expression)                    |     |
+| 属性名             | 类型                                                         | 默认值  | 说明                                                                        | 版本 |
+| ------------------ | ------------------------------------------------------------ | ------- | --------------------------------------------------------------------------- | ---- |
+| sortable           | `boolean`                                                    | `false` | 是否可排序                                                                  |
+| searchable         | `boolean` \| `Schema`                                        | `false` | 是否可快速搜索，开启`autoGenerateFilter`后，`searchable`支持配置`Schema`    |
+| filterable         | `boolean` \| [`QuickFilterConfig`](./crud#quickfilterconfig) | `false` | 是否可快速搜索，`options`属性为静态选项，支持设置`source`属性从接口获取选项 |
+| quickEdit          | `boolean` \| [`QuickEditConfig`](./crud#quickeditconfig)     | -       | 快速编辑，一般需要配合`quickSaveApi`接口使用                                |
+| quickEditEnabledOn | `SchemaExpression`                                           | -       | 开启快速编辑条件[表达式](../../docs/concepts/expression)                    |      |
 
 #### QuickFilterConfig
 
-| 属性名        | 类型                          | 默认值  | 说明                                                     | 版本    |
-| ------------- | ----------------------------- | ------- | -------------------------------------------------------- | ------- |
-| options       | `Array<any>`                  | -       | 静态选项                                                 |         |
-| multiple      | `boolean`                     | `false` | 是否支持多选                                             |         |
-| source        | [`Api`](../../docs/types/api) \| `string`  | -       | 选项 API 接口                                            |   `3.6.0`版本后支持上下文变量      |
-| refreshOnOpen | `boolean`                     | `false` | 配置 source 前提下，每次展开筛选浮层是否重新加载选项数据 | `2.9.0` |
-| strictMode    | `boolean`                     | `false` | 严格模式，开启严格模式后，会采用 JavaScript 严格相等比较 | `2.3.0` |
+| 属性名        | 类型                                      | 默认值  | 说明                                                     | 版本                        |
+| ------------- | ----------------------------------------- | ------- | -------------------------------------------------------- | --------------------------- |
+| options       | `Array<any>`                              | -       | 静态选项                                                 |                             |
+| multiple      | `boolean`                                 | `false` | 是否支持多选                                             |                             |
+| source        | [`Api`](../../docs/types/api) \| `string` | -       | 选项 API 接口                                            | `3.6.0`版本后支持上下文变量 |
+| refreshOnOpen | `boolean`                                 | `false` | 配置 source 前提下，每次展开筛选浮层是否重新加载选项数据 | `2.9.0`                     |
+| strictMode    | `boolean`                                 | `false` | 严格模式，开启严格模式后，会采用 JavaScript 严格相等比较 | `2.3.0`                     |
 
 #### QuickEditConfig
 
-| 属性名          | 类型                      | 默认值      | 说明                                                                                                    | 版本 |
-| --------------- | ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------- | ---- |
-| type            | `SchemaType`              | -           | 表单项组件类型                                                                                          |      |
-| body            | `SchemaCollection`        | -           | 组件容器，支持多个表单项组件                                                                            |      |
-| mode            | `'inline' \| 'popOver'`   | `'popOver'` | 编辑模式，inline 为行内编辑，popOver 为浮层编辑                                                         |      |
-| saveImmediately | `boolean` 或 `{api: Api}` | `false`     | 是否修改后即时保存，一般需要配合`quickSaveItemApi`接口使用，也可以直接配置[`Api`](../../docs/types/api) |      |
+| 属性名          | 类型                      | 默认值      | 说明                                                                                                    | 版本    |
+| --------------- | ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------- | ------- |
+| type            | `SchemaType`              | -           | 表单项组件类型                                                                                          |         |
+| body            | `SchemaCollection`        | -           | 组件容器，支持多个表单项组件                                                                            |         |
+| mode            | `'inline' \| 'popOver'`   | `'popOver'` | 编辑模式，inline 为行内编辑，popOver 为浮层编辑                                                         |         |
+| icon            | `string`                  | -           | 自定义快速编辑按钮的图标                                                                                | `6.1.0` |
+| saveImmediately | `boolean` 或 `{api: Api}` | `false`     | 是否修改后即时保存，一般需要配合`quickSaveItemApi`接口使用，也可以直接配置[`Api`](../../docs/types/api) |         |
 
 ### columns-toggler 属性表
 
@@ -4948,7 +5444,7 @@ value 结构说明：
 
 #### 行记录中字段赋值
 
-需要通过表达式配置动态`name`或`id`和`componentName`或`componentId`。例如修改`engine`选中状态的同时选中`version`，勾选`id`的同时去掉对`engine`的选中。
+需要通过表达式配置动态`id`和`componentId`。例如修改`engine`选中状态的同时选中`version`，勾选`id`的同时去掉对`engine`的选中。
 
 ```schema: scope="body"
 {
@@ -4960,13 +5456,12 @@ value 结构说明：
         {
             "name": "id",
             "label": "ID",
-            "id": "u:3db3f2b1b99e",
             "onEvent": {
                 "click": {
                     "actions": [
                     {
                         "actionType": "setValue",
-                        "componentId": "u:4868d7db0139_${index}",
+                        "componentId": "version_${index}",
                         "args": {
                             "value": false
                         }
@@ -4981,13 +5476,12 @@ value 结构说明：
             "label": "engine",
             "quickEdit": true,
             "quickEditEnabledOn": "this.id < 5",
-            "id": "u:0b9be99f3403",
             "onEvent": {
                 "change": {
                     "actions": [
                     {
                         "actionType": "setValue",
-                        "componentName": "version_${index}",
+                        "componentId": "version_${index}",
                         "args": {
                             "value": true
                         }
@@ -4997,12 +5491,12 @@ value 结构说明：
             }
         },
         {
-            "name": "version_${index}",
+            "name": "version",
             "type": "checkbox",
             "label": "version",
             "quickEdit": true,
             "quickEditEnabledOn": "this.id < 5",
-            "id": "u:4868d7db0139_${index}"
+            "id": "version_${index}"
         }
     ],
     "id": "u:f5bad706d7c5"

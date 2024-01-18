@@ -85,9 +85,11 @@ setSchemaTpl(
   'formItemExtraName',
   getSchemaTpl('formItemName', {
     required: false,
-    label: '结尾字段名',
-    name: 'extraName',
-    description: '配置了结尾字段名，该组件将开始和结尾存成两个字段'
+    label: tipedLabel(
+      '结尾字段名',
+      '配置了结尾字段名，该组件将开始和结尾存成两个字段'
+    ),
+    name: 'extraName'
   })
 );
 
@@ -170,6 +172,7 @@ setSchemaTpl('formItemInline', {
   label: '表单项内联',
   name: 'inline',
   visibleOn: 'data.mode != "inline"',
+  inputClassName: 'is-inline',
   pipeIn: defaultValue(false)
   // onChange: (value:any, origin:any, item:any, form:any) => form.getValueByName('size') === "full" && form.setValueByName('')
 });
@@ -247,7 +250,7 @@ setSchemaTpl('labelHide', () =>
     pipeIn: (value: any) => value === false,
     pipeOut: (value: any) => (value === true ? false : ''),
     visibleOn:
-      'this.__props__ && this.__props__.formMode === "horizontal" || data.mode === "horizontal" || data.label === false'
+      'this.__props__ && this.__props__.formMode === "horizontal" || data.mode === "horizontal"'
   })
 );
 
@@ -1736,4 +1739,17 @@ setSchemaTpl('primaryField', {
 
     return value;
   }
+});
+
+/**
+ * 是否为懒加载节点字段
+ */
+setSchemaTpl('deferField', {
+  label: tipedLabel(
+    '懒加载字段',
+    '是否为懒加载节点的字段名称，默认为defer，可以用该配置项自定义字段名称'
+  ),
+  name: 'deferField',
+  type: 'input-text',
+  placeholder: '自定义开启懒加载的字段'
 });

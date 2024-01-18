@@ -79,7 +79,7 @@ export class RootRenderer extends React.Component<RootRendererProps> {
     }
 
     if (props.location !== prevProps.location) {
-      this.store.updateLocation(props.location);
+      this.store.updateLocation(props.location, this.props.env?.parseLocation);
     }
 
     if (props.context !== prevProps.context) {
@@ -474,7 +474,7 @@ export class RootRenderer extends React.Component<RootRendererProps> {
     const store = this.store;
 
     if (store.runtimeError) {
-      this.renderRuntimeError();
+      return this.renderRuntimeError();
     }
 
     return (

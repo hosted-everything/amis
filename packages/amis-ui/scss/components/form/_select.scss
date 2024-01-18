@@ -70,6 +70,7 @@
     var(--select-base-default-paddingLeft);
   cursor: pointer;
   color: var(--Form-select-color);
+  transition: all var(--animation-duration) ease-in-out;
 
   &:hover {
     background: var(--Form-select-onHover-bg);
@@ -587,7 +588,7 @@
   background: var(--Form-select-menu-bg);
   color: var(--Form-select-menu-color);
   border: var(--Form-select-outer-borderWidth) solid
-    var(--Form-input-onFocused-borderColor);
+    var(--Form-select-outer-borderColor);
   box-shadow: var(--Form-select-outer-boxShadow);
   // min-width: px2rem(100px);
 

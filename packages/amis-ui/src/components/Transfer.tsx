@@ -172,6 +172,7 @@ export class Transfer<
     | 'statistics'
     | 'virtualThreshold'
     | 'checkAllLabel'
+    | 'itemHeight'
     | 'valueField'
   > = {
     multiple: true,
@@ -179,6 +180,7 @@ export class Transfer<
     selectMode: 'list',
     statistics: true,
     virtualThreshold: 100,
+    itemHeight: 38,
     checkAllLabel: 'Select.checkAll',
     valueField: 'value'
   };
@@ -207,7 +209,8 @@ export class Transfer<
       props.selectMode === 'tree' &&
       !!findTree(
         props.options,
-        (option: Option) => option.deferApi || option.defer
+        (option: Option) =>
+          option.deferApi || option[(props.deferField as string) || 'defer']
       );
 
     // 计算结果的selectMode
@@ -751,6 +754,7 @@ export class Transfer<
       noResultsText,
       labelField,
       valueField = 'value',
+      deferField = 'defer',
       virtualThreshold,
       itemHeight,
       virtualListHeight,
@@ -839,6 +843,7 @@ export class Transfer<
         multiple={multiple}
         labelField={labelField}
         valueField={valueField}
+        deferField={deferField}
         virtualThreshold={virtualThreshold}
         itemHeight={itemHeight}
         virtualListHeight={virtualListHeight}

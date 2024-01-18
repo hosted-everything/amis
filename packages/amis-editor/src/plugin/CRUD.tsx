@@ -1,9 +1,8 @@
 import {toast, normalizeApiResponseData} from 'amis';
-import get from 'lodash/get';
 import cloneDeep from 'lodash/cloneDeep';
 import React from 'react';
 import {getEventControlConfig} from '../renderer/event-control/helper';
-
+import {genCodeSchema} from '../renderer/APIAdaptorControl';
 import {
   getI18nEnabled,
   jsonToJsonSchema,
@@ -495,10 +494,10 @@ export class CRUDPlugin extends BasePlugin {
               {
                 status: 0,
                 msg: '',
-                data: [
-                  {id: 1, name: 'Jack'},
-                  {id: 2, name: 'Rose'}
-                ]
+                data: {
+                  items: [{id: 1, engine: 'Webkit'}],
+                  total: 1
+                }
               },
               null,
               2
@@ -508,6 +507,7 @@ export class CRUDPlugin extends BasePlugin {
           type: 'button',
           label: '格式校验并自动生成列配置',
           className: 'm-t-xs m-b-xs',
+          visibleOn: '!!this.api.url',
           onClick: async (e: Event, props: any) => {
             const data = props.data;
             const schemaFilter = getEnv(
@@ -1210,6 +1210,38 @@ export class CRUDPlugin extends BasePlugin {
             }
           }),
 
+          {
+            name: 'matchFunc',
+            type: 'ae-functionEditorControl',
+            allowFullscreen: true,
+            mode: 'normal',
+            label: tipedLabel(
+              '搜索匹配函数',
+              '自定义搜索匹配函数，当开启<code>loadDataOnce</code>时，会基于该函数计算的匹配结果进行过滤，主要用于处理列字段类型较为复杂或者字段值格式和后端返回不一致的场景。<code>matchSorter</code>函数用于处理复杂的过滤场景，比如模糊匹配等，更多详细内容推荐查看<a href="https://github.com/kentcdodds/match-sorter" target="_blank">match-sorter</a>。'
+            ),
+            renderLabel: true,
+            params: [
+              {
+                label: 'items',
+                tip: genCodeSchema('/* 当前列表的全量数据 */\nitems: any[]')
+              },
+              {
+                label: 'itemsRaw',
+                tip: genCodeSchema(
+                  '/* 最近一次接口返回的全量数据 */\nitemsRaw: any[]'
+                )
+              },
+              {
+                label: 'options',
+                tip: genCodeSchema(
+                  '/* 额外的配置 */\noptions?: {\n  /* 查询参数 */\n  query: Record < string, any>;\n  /* 列配置 */\n  columns: any;\n  /** match-sorter 匹配函数 */\n  matchSorter: (items: any[], value: string, options?: MatchSorterOptions<any>) => any[]\n}'
+                )
+              }
+            ],
+            placeholder: `return items;`,
+            visibleOn: '${loadDataOnce === true}'
+          },
+
           getSchemaTpl('switch', {
             label: '开启定时刷新',
             name: 'interval',
@@ -1318,7 +1350,8 @@ export class CRUDPlugin extends BasePlugin {
               getSchemaTpl('quickSaveFailed')
             ]
           }
-        ]
+        ],
+        visibleOn: '!this.pickerMode'
       },
 
       {
@@ -1518,6 +1551,10 @@ export class CRUDPlugin extends BasePlugin {
                 type: 'select',
                 name: 'type',
                 columnClassName: 'w-ssm',
+                overlay: {
+                  align: 'left',
+                  width: 150
+                },
                 options: [
                   {
                     value: 'bulk-actions',
@@ -1569,12 +1606,12 @@ export class CRUDPlugin extends BasePlugin {
                     value: 'drag-toggler',
                     label: '拖拽切换'
                   },
-
-                  {
-                    value: 'check-all',
-                    label: '全选',
-                    hiddenOn: '!this.mode || this.mode === "table"'
-                  },
+                  // list和cards自带全选了，没必要再加了
+                  // {
+                  //   value: 'check-all',
+                  //   label: '全选',
+                  //   hiddenOn: '!this.mode || this.mode === "table"'
+                  // },
 
                   {
                     value: 'tpl',
@@ -1700,6 +1737,10 @@ export class CRUDPlugin extends BasePlugin {
                 type: 'select',
                 name: 'type',
                 columnClassName: 'w-ssm',
+                overlay: {
+                  align: 'left',
+                  width: 150
+                },
                 options: [
                   {
                     value: 'bulk-actions',
@@ -2137,12 +2178,17 @@ export class CRUDPlugin extends BasePlugin {
       return;
     }
 
-    let childSchame = await child.info.plugin.buildDataSchemas(
+    const tmpSchema = await child.info.plugin.buildDataSchemas?.(
       child,
       undefined,
       trigger,
       node
     );
+
+    let childSchema = {
+      ...tmpSchema,
+      ...(tmpSchema?.$id ? {} : {$id: `${child.id}-${child.type}`})
+    };
 
     // 兼容table的rows，并自行merged异步数据
     if (child.type === 'table') {
@@ -2150,7 +2196,7 @@ export class CRUDPlugin extends BasePlugin {
       const columns: EditorNodeType = child.children.find(
         item => item.isRegion && item.region === 'columns'
       );
-      const rowsSchema = childSchame.properties.rows?.items;
+      const rowsSchema = childSchema.properties.rows?.items;
 
       if (trigger) {
         const isColumnChild = someTree(
@@ -2172,13 +2218,13 @@ export class CRUDPlugin extends BasePlugin {
           ...rowsSchema?.properties
         };
 
-        if (isColumnChild) {
-          Object.keys(tmpProperties).map(key => {
-            itemsSchema[key] = {
-              ...tmpProperties[key]
-            };
-          });
+        Object.keys(tmpProperties).map(key => {
+          itemsSchema[key] = {
+            ...tmpProperties[key]
+          };
+        });
 
+        if (isColumnChild) {
           const childScope = this.manager.dataSchema.getScope(
             `${child.id}-${child.type}-currentRow`
           );
@@ -2195,23 +2241,22 @@ export class CRUDPlugin extends BasePlugin {
           }
         }
       }
-
-      childSchame = {
-        $id: childSchame.$id,
-        type: childSchame.type,
+      childSchema = {
+        $id: childSchema.$id,
+        type: childSchema.type,
         properties: {
-          items: childSchame.properties.rows,
+          items: childSchema.properties.rows,
           selectedItems: {
-            ...childSchame.properties.selectedItems,
+            ...childSchema.properties.selectedItems,
             items: {
-              ...childSchame.properties.selectedItems.items,
+              ...childSchema.properties.selectedItems.items,
               properties: itemsSchema
             }
           },
           unSelectedItems: {
-            ...childSchame.properties.unSelectedItems,
+            ...childSchema.properties.unSelectedItems,
             items: {
-              ...childSchame.properties.unSelectedItems.items,
+              ...childSchema.properties.unSelectedItems.items,
               properties: itemsSchema
             }
           },
@@ -2227,7 +2272,7 @@ export class CRUDPlugin extends BasePlugin {
       };
     }
 
-    return childSchame;
+    return childSchema;
   }
 
   rendererBeforeDispatchEvent(node: EditorNodeType, e: any, data: any) {
@@ -2283,16 +2328,20 @@ export class CRUDPlugin extends BasePlugin {
 
     // 保底
     fields.length ||
-      fields.concat([
-        {
-          name: 'a',
-          label: 'A'
-        },
-        {
-          name: 'b',
-          label: 'B'
-        }
-      ]);
+      fields.push(
+        ...[
+          {
+            type: 'text',
+            name: schema.labelField || 'label',
+            label: 'label'
+          },
+          {
+            type: 'text',
+            name: schema.valueField || 'value',
+            label: 'value'
+          }
+        ]
+      );
 
     if (to === 'table') {
       return fields.concat({

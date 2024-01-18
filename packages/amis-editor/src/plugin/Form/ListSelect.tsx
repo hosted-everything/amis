@@ -7,9 +7,18 @@ import {
 import {registerEditorPlugin} from 'amis-editor-core';
 import {BasePlugin, BaseEventContext, diff} from 'amis-editor-core';
 import {formItemControl} from '../../component/BaseControl';
-import type {RendererPluginAction, RendererPluginEvent} from 'amis-editor-core';
+import type {
+  EditorManager,
+  RendererPluginAction,
+  RendererPluginEvent
+} from 'amis-editor-core';
 import type {Schema} from 'amis';
-import {resolveOptionType, schemaArrayFormat, schemaToArray} from '../../util';
+import {
+  resolveOptionEventDataSchame,
+  resolveOptionType,
+  schemaArrayFormat,
+  schemaToArray
+} from '../../util';
 
 export class ListControlPlugin extends BasePlugin {
   static id = 'ListControlPlugin';
@@ -59,29 +68,32 @@ export class ListControlPlugin extends BasePlugin {
 
   panelTitle = '列表选择';
 
+  panelJustify = true;
+
   // 事件定义
   events: RendererPluginEvent[] = [
     {
       eventName: 'change',
       eventLabel: '值变化',
       description: '选中值变化时触发',
-      dataSchema: [
-        {
-          type: 'object',
-          properties: {
-            data: {
-              type: 'object',
-              title: '数据',
-              properties: {
-                value: {
-                  type: 'string',
-                  title: '选中的值'
+      dataSchema: (manager: EditorManager) => {
+        const {value} = resolveOptionEventDataSchame(manager);
+
+        return [
+          {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'object',
+                title: '数据',
+                properties: {
+                  value
                 }
               }
             }
           }
-        }
-      ]
+        ];
+      }
     }
   ];
 
@@ -149,7 +161,6 @@ export class ListControlPlugin extends BasePlugin {
                 ...(schema || {}),
                 itemSchema: null
               }),
-              mode: 'vertical',
               useSelectMode: true, // 改用 Select 设置模式
               visibleOn: 'this.options && this.options.length > 0'
             })
@@ -225,7 +236,7 @@ export class ListControlPlugin extends BasePlugin {
   };
 
   buildDataSchemas(node: EditorNodeType, region: EditorNodeType) {
-    const type = resolveOptionType(node.schema?.options);
+    const type = resolveOptionType(node.schema);
     // todo:异步数据case
     let dataSchema: any = {
       type,

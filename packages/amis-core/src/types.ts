@@ -1,7 +1,7 @@
 // https://json-schema.org/draft-07/json-schema-release-notes.html
 import type {JSONSchema7} from 'json-schema';
 import {ListenerAction} from './actions/Action';
-import {debounceConfig} from './utils/renderer-event';
+import {debounceConfig, trackConfig} from './utils/renderer-event';
 
 export interface Option {
   /**
@@ -152,6 +152,14 @@ export interface BaseApiObject {
    * 默认都是追加模式，如果想完全替换把这个配置成 true
    */
   replaceData?: boolean;
+
+  /**
+   * 是否将两次返回的数据字段，做一个合并。配置返回对象中的字段名，支持配置多个。
+   *
+   * 比如：同时返回 log 字段，第一次返回 {log: '1'}，第二次返回 {log: '2'}，合并后的结果是 {log: ['1', '2']]}
+   * 再比如：同时返回 items 字段，第一次返回 {items: [1, 2]}，第二次返回 {items: [3, 4]}，合并后的结果是 {items: [1, 2, 3, 4]}
+   */
+  concatDataFields?: string | Array<string>;
 
   /**
    * 是否自动刷新，当 url 中的取值结果变化时，自动刷新数据。
@@ -458,7 +466,8 @@ export interface EventTrack {
     | 'tabChange'
     | 'pageLoaded'
     | 'pageHidden'
-    | 'pageVisible';
+    | 'pageVisible'
+    | string;
 
   /**
    * 事件数据
@@ -618,6 +627,7 @@ export interface BaseSchemaWithoutType {
       weight?: number; // 权重
       actions: ListenerAction[]; // 执行的动作集
       debounce?: debounceConfig;
+      track?: trackConfig;
     };
   };
   /**

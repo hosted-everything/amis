@@ -16,70 +16,116 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
-        {
-            "type": "table2",
-            "title": "表格标题 - ${rows.length}",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 120
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "type": "property",
-                    "items": [
-                        {
-                            "label": "cpu",
-                            "content": "1 core"
-                        },
-                        {
-                            "label": "memory",
-                            "content": "4G"
-                        },
-                        {
-                            "label": "disk",
-                            "content": "80G"
-                        },
-                        {
-                            "label": "network",
-                            "content": "4M",
-                            "span": 2
-                        },
-                        {
-                            "label": "IDC",
-                            "content": "beijing"
-                        },
-                        {
-                            "label": "Note",
-                            "content": "其它说明",
-                            "span": 3
-                        }
-                    ]
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ],
-            "footer": {
-                "type": "tpl",
-                "tpl": "表格Footer"
+  "type": "page",
+  "id": "page_001",
+  "data": {
+    "flag": true
+  },
+  "body": [
+    {
+      "type": "button",
+      "label": "启用行删除",
+      "className": "m-r",
+      "onEvent": {
+        "click": {
+          "actions": [
+            {
+              "actionType": "setValue",
+              "componentId": "page_001",
+              "args": {
+                "value": {"flag": false}
+              }
             }
+          ]
         }
-    ]
+      }
+    },
+    {
+      "type": "button",
+      "label": "禁用行删除",
+      "onEvent": {
+        "click": {
+          "actions": [
+            {
+              "actionType": "setValue",
+              "componentId": "page_001",
+              "args": {
+                "value": {"flag": true}
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "service",
+      "api": "/api/sample?perPage=5",
+      "body": [
+        {
+          "type": "table2",
+          "title": "表格标题 - ${rows.length}",
+          "source": "$rows",
+          "canAccessSuperData": true,
+          "columns": [
+            {
+              "title": "Engine",
+              "name": "engine",
+              "width": 120
+            },
+            {
+              "title": "Version",
+              "name": "version",
+              "type": "property",
+              "items": [
+                {
+                  "label": "cpu",
+                  "content": "1 core"
+                },
+                {
+                  "label": "memory",
+                  "content": "4G"
+                },
+                {
+                  "label": "disk",
+                  "content": "80G"
+                },
+                {
+                  "label": "network",
+                  "content": "4M",
+                  "span": 2
+                },
+                {
+                  "label": "IDC",
+                  "content": "beijing"
+                },
+                {
+                  "label": "Note",
+                  "content": "其它说明",
+                  "span": 3
+                }
+              ]
+            },
+            {
+              "title": "Browser",
+              "name": "browser"
+            },
+            {
+              "title": "Operation",
+              "name": "operation",
+              "type": "button",
+              "label": "删除",
+              "size": "sm",
+              "disabledOn": "${flag}"
+            }
+          ],
+          "footer": {
+            "type": "tpl",
+            "tpl": "表格Footer"
+          }
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -93,39 +139,39 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -135,40 +181,40 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id",
+        "rowClick": true
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id",
-                "rowClick": true
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -178,44 +224,44 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id",
+        "selectedRowKeys": [1, 2]
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id",
-                "selectedRowKeys": [1, 2]
-            },
-            "columns": [
-                {
-                    "title": "ID",
-                    "name": "id"
-                },
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "ID",
+          "name": "id"
+        },
+        {
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -225,44 +271,44 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id",
+        "selectedRowKeysExpr": "data.record.id === 1"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id",
-                "selectedRowKeysExpr": "data.record.id === 1"
-            },
-            "columns": [
-                {
-                    "title": "ID",
-                    "name": "id"
-                },
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "ID",
+          "name": "id"
+        },
+        {
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -272,33 +318,33 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "radio",
+        "keyField": "id",
+        "disableOn": "this.record.id === 1"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "radio",
-                "keyField": "id",
-                "disableOn": "this.record.id === 1"
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -308,61 +354,61 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id",
+        "selections": [
+          {
+            "key": "all",
+            "text": "全选所有"
+          },
+          {
+            "key": "invert",
+            "text": "反选当页"
+          },
+          {
+            "key": "none",
+            "text": "清空所有"
+          },
+          {
+            "key": "odd",
+            "text": "选择奇数行"
+          },
+          {
+            "key": "even",
+            "text": "选择偶数行"
+          }
+        ]
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id",
-                "selections": [
-                    {
-                        "key": "all",
-                        "text": "全选所有"
-                    },
-                    {
-                        "key": "invert",
-                        "text": "反选当页"
-                    },
-                    {
-                        "key": "none",
-                        "text": "清空所有"
-                    },
-                    {
-                        "key": "odd",
-                        "text": "选择奇数行"
-                    },
-                    {
-                        "key": "even",
-                        "text": "选择偶数行"
-                    }
-                ]
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -372,40 +418,40 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "maxKeepItemSelectionLength": 2,
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "maxKeepItemSelectionLength": 2,
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -415,52 +461,52 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "sorter": true,
-                    "filterMultiple": true,
-                    "filters": [
-                        {
-                            "text": "Joe",
-                            "value": "Joe"
-                        },
-                        {
-                            "text": "Jim",
-                            "value": "Jim"
-                        }
-                    ]
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "sorter": true,
-                    "width": 100
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "filters": [
-                        {
-                            "text": "Joe",
-                            "value": "Joe"
-                        },
-                        {
-                            "text": "Jim",
-                            "value": "Jim"
-                        }
-                    ]
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "sorter": true,
+          "filterMultiple": true,
+          "filters": [
+            {
+              "text": "Joe",
+              "value": "Joe"
+            },
+            {
+              "text": "Jim",
+              "value": "Jim"
+            }
+          ]
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "sorter": true,
+          "width": 100
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "filters": [
+            {
+              "text": "Joe",
+              "value": "Joe"
+            },
+            {
+              "text": "Jim",
+              "value": "Jim"
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -470,38 +516,38 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "bordered": true,
+      "title": "标题",
+      "footer": "Footer",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "bordered": true,
-            "title": "标题",
-            "footer": "Footer",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -515,48 +561,48 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ],
-            "expandable": {
-                "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
-                "keyField": "id",
-                "expandedRowClassNameExpr": "<%= data.rowIndex === 2 ? 'bg-success' : '' %>",
-                "expandedRowKeys": ["3"],
-                "type": "container",
-                "body": [
-                    {
-                        "type": "tpl",
-                        "html": "<div class=\"test\">测试测试</div>"
-                    }
-                ]
-            }
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ],
+      "expandable": {
+        "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
+        "keyField": "id",
+        "expandedRowClassNameExpr": "${ rowIndex === 2 ? 'bg-success' : '' }",
+        "expandedRowKeys": ["3"],
+        "type": "container",
+        "body": [
+          {
+            "type": "tpl",
+            "html": "<div class=\"test\">测试测试</div>"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -566,48 +612,48 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ],
-            "expandable": {
-                "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
-                "keyField": "id",
-                "expandedRowClassNameExpr": "<%= data.rowIndex % 2 ? 'bg-success' : '' %>",
-                "expandedRowKeysExpr": "data.record.id == '3'",
-                "type": "container",
-                "body": [
-                    {
-                        "type": "tpl",
-                        "html": "<div class=\"test\">测试测试</div>"
-                    }
-                ]
-            }
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ],
+      "expandable": {
+        "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
+        "keyField": "id",
+        "expandedRowClassNameExpr": "${ rowIndex % 2 ? 'bg-success' : '' }",
+        "expandedRowKeysExpr": "data.record.id == '3'",
+        "type": "container",
+        "body": [
+          {
+            "type": "tpl",
+            "html": "<div class=\"test\">测试测试</div>"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -617,64 +663,64 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ],
-            "expandable": {
-                "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
-                "keyField": "id",
-                "expandedRowClassNameExpr": "<%= data.rowIndex % 2 ? 'bg-success' : '' %>",
-                "expandedRowKeys": ["3"],
-                "type": "container",
-                "position": "right",
-                "body": [
-                    {
-                        "type": "tpl",
-                        "html": "<div class=\"test\">测试测试</div>"
-                    }
-                ]
-            },
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计"
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 2
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "最后一列"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ],
+      "expandable": {
+        "expandableOn": "this.record && (this.record.id === 1 || this.record.id === 3)",
+        "keyField": "id",
+        "expandedRowClassNameExpr": "${ rowIndex % 2 ? 'bg-success' : '' }",
+        "expandedRowKeys": ["3"],
+        "type": "container",
+        "position": "right",
+        "body": [
+          {
+            "type": "tpl",
+            "html": "<div class=\"test\">测试测试</div>"
+          }
+        ]
+      },
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计"
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 2
+        },
+        {
+          "type": "tpl",
+          "tpl": "最后一列"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -684,62 +730,62 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "id": "table-select",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "id": "table-select",
-            "columns": [
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "展开",
+          "size": "sm",
+          "onEvent": {
+            "click": {
+              "actions": [
                 {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "展开",
-                    "size": "sm",
-                    "onEvent": {
-                        "click": {
-                            "actions": [
-                                {
-                                    "actionType": "expand",
-                                    "componentId": "table-select",
-                                    "description": "展开行",
-                                    "args": {
-                                        "value": "${id}"
-                                    }
-                                }
-                            ]
-                        }
-                    }
+                  "actionType": "expand",
+                  "componentId": "table-select",
+                  "description": "展开行",
+                  "args": {
+                    "value": "${id}"
+                  }
                 }
-            ],
-            "expandable": {
-                "keyField": "id",
-                "expandedRowClassNameExpr": "<%= data.rowIndex % 2 ? 'bg-success' : '' %>",
-                "type": "container",
-                "position": "none",
-                "body": [
-                    {
-                        "type": "tpl",
-                        "html": "<div class=\"test\">测试测试</div>"
-                    }
-                ]
+              ]
             }
+          }
         }
-    ]
+      ],
+      "expandable": {
+        "keyField": "id",
+        "expandedRowClassNameExpr": "${ rowIndex % 2 ? 'bg-success' : '' }",
+        "type": "container",
+        "position": "none",
+        "body": [
+          {
+            "type": "tpl",
+            "html": "<div class=\"test\">测试测试</div>"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -747,68 +793,68 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "container",
+      "style": {
+        "marginBottom": "5px"
+      },
+      "body": [
         {
-            "type": "container",
-            "style": {
-                "marginBottom": "5px"
-            },
-            "body": [
+          "type": "button",
+          "label": "展开",
+          "size": "sm",
+          "onEvent": {
+            "click": {
+              "actions": [
                 {
-                    "type": "button",
-                    "label": "展开",
-                    "size": "sm",
-                    "onEvent": {
-                        "click": {
-                            "actions": [
-                                {
-                                    "actionType": "expand",
-                                    "componentId": "table-select2",
-                                    "description": "展开行",
-                                    "args": {
-                                        "expandedRowsExpr": "data.record?.id === 1 || data.record?.id === 3"
-                                    }
-                                }
-                            ]
-                        }
-                    }
+                  "actionType": "expand",
+                  "componentId": "table-select2",
+                  "description": "展开行",
+                  "args": {
+                    "expandedRowsExpr": "data.record?.id === 1 || data.record?.id === 3"
+                  }
                 }
-            ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "table2",
+      "source": "$rows",
+      "id": "table-select2",
+      "columns": [
+        {
+          "title": "Engine",
+          "name": "engine"
         },
         {
-            "type": "table2",
-            "source": "$rows",
-            "id": "table-select2",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                }
-            ],
-            "expandable": {
-                "keyField": "id",
-                "expandedRowClassNameExpr": "<%= data.rowIndex % 2 ? 'bg-success' : '' %>",
-                "type": "container",
-                "position": "none",
-                "body": [
-                    {
-                        "type": "tpl",
-                        "html": "<div class=\"test\">测试测试</div>"
-                    }
-                ]
-            }
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
         }
-    ]
+      ],
+      "expandable": {
+        "keyField": "id",
+        "expandedRowClassNameExpr": "${ rowIndex % 2 ? 'bg-success' : '' }",
+        "type": "container",
+        "position": "none",
+        "body": [
+          {
+            "type": "tpl",
+            "html": "<div class=\"test\">测试测试</div>"
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -818,42 +864,42 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "rowSpanExpr": "<%= data.rowIndex === 2 ? 2 : 0 %>"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText",
-                    "colSpanExpr": "<%= data.rowIndex === 6 ? 3 : 0 %>"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "rowSpanExpr": "${ rowIndex === 2 ? 2 : 0 }"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText",
+          "colSpanExpr": "${ rowIndex === 6 ? 3 : 0 }"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -970,29 +1016,29 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"y" : 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"y" : 200},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1002,46 +1048,46 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"x": 1000},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"x": 1000},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "fixed": "left",
-                    "width": 100
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "fixed": "left",
-                    "width": 100
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform",
-                    "fixed": "right"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "fixed": "left",
+          "width": 100
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "fixed": "left",
+          "width": 100
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Platform",
+          "name": "platform",
+          "fixed": "right"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1051,74 +1097,74 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"x": 1000, "y": 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"x": 1000, "y": 200},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "fixed": "left",
-                    "width": 100
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "type": "property",
-                    "width": 400,
-                    "items": [
-                        {
-                            "label": "cpu",
-                            "content": "1 core"
-                        },
-                        {
-                            "label": "memory",
-                            "content": "4G"
-                        },
-                        {
-                            "label": "disk",
-                            "content": "80G"
-                        },
-                        {
-                            "label": "network",
-                            "content": "4M",
-                            "span": 2
-                        },
-                        {
-                            "label": "IDC",
-                            "content": "beijing"
-                        },
-                        {
-                            "label": "Note",
-                            "content": "其它说明",
-                            "span": 3
-                        }
-                    ]
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform",
-                    "fixed": "right"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "fixed": "left",
+          "width": 100
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "type": "property",
+          "width": 400,
+          "items": [
+            {
+              "label": "cpu",
+              "content": "1 core"
+            },
+            {
+              "label": "memory",
+              "content": "4G"
+            },
+            {
+              "label": "disk",
+              "content": "80G"
+            },
+            {
+              "label": "network",
+              "content": "4M",
+              "span": 2
+            },
+            {
+              "label": "IDC",
+              "content": "beijing"
+            },
+            {
+              "label": "Note",
+              "content": "其它说明",
+              "span": 3
+            }
+          ]
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Platform",
+          "name": "platform",
+          "fixed": "right"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1128,53 +1174,53 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"y": 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"y": 200},
-            "columns": [
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Grade1",
+          "name": "grade1",
+          "children": [
+            {
+              "title": "Browser",
+              "name": "browser"
+            },
+            {
+              "title": "Badge",
+              "name": "badgeText",
+              "children": [
                 {
-                    "title": "Engine",
-                    "name": "engine",
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Grade1",
-                    "name": "grade1",
-                    "children": [
-                        {
-                            "title": "Browser",
-                            "name": "browser"
-                        },
-                        {
-                            "title": "Badge",
-                            "name": "badgeText",
-                            "children": [
-                                {
-                                    "title": "ID",
-                                    "name": "id"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
+                  "title": "ID",
+                  "name": "id"
                 }
-            ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1182,64 +1228,64 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"y": 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"y": 200},
-            "columns": [
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade",
+          "colSpanExpr": "${ rowIndex === 1 ? 3 : 0 }"
+        },
+        {
+          "title": "Grade1",
+          "name": "grade1",
+          "children": [
+            {
+              "title": "Browser",
+              "name": "browser"
+            }
+          ]
+        },
+        {
+          "title": "Platform1",
+          "name": "platform1",
+          "children": [
+            {
+              "title": "Badge1",
+              "name": "badgeText1",
+              "children": [
                 {
-                    "title": "Engine",
-                    "name": "engine",
+                  "title": "ID",
+                  "name": "id"
                 },
                 {
-                    "title": "Version",
-                    "name": "version"
+                  "title": "Platform",
+                  "name": "platform"
                 },
                 {
-                    "title": "Grade",
-                    "name": "grade",
-                    "colSpanExpr": "<%= data.rowIndex === 1 ? 3 : 0 %>"
-                },
-                {
-                    "title": "Grade1",
-                    "name": "grade1",
-                    "children": [
-                        {
-                            "title": "Browser",
-                            "name": "browser"
-                        }
-                    ]
-                },
-                {
-                    "title": "Platform1",
-                    "name": "platform1",
-                    "children": [
-                        {
-                            "title": "Badge1",
-                            "name": "badgeText1",
-                            "children": [
-                                {
-                                    "title": "ID",
-                                    "name": "id"
-                                },
-                                {
-                                    "title": "Platform",
-                                    "name": "platform"
-                                },
-                                {
-                                    "title": "Badge",
-                                    "name": "badgeText"
-                                }
-                            ]
-                        }
-                    ]
+                  "title": "Badge",
+                  "name": "badgeText"
                 }
-            ]
+              ]
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1251,44 +1297,44 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "draggable": true,
+      "keyField": "id",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "draggable": true,
-            "keyField": "id",
-            "columns": [
-                {
-                    "title": "ID",
-                    "name": "id"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText",
-                    "children": [
-                        {
-                            "title": "Engine",
-                            "name": "engine",
-                        }
-                    ]
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "ID",
+          "name": "id"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText",
+          "children": [
+            {
+              "title": "Engine",
+              "name": "engine"
+            }
+          ]
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1298,192 +1344,192 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "page",
-    "body": {
-        "type": "service",
-        "data": {
-            "rows": [
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 4.0",
-                    "platform": "Win 95+",
-                    "version": "4",
-                    "grade": "X",
-                    "id": 1,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 1001,
-                            "children": [
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 4.0",
-                                    "platform": "Win 95+",
-                                    "version": "4",
-                                    "grade": "X",
-                                    "id": 10001
-                                },
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 5.0",
-                                    "platform": "Win 95+",
-                                    "version": "5",
-                                    "grade": "C",
-                                    "id": 10002
-                                }
-                            ]
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 1002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.0",
-                    "platform": "Win 95+",
-                    "version": "5",
-                    "grade": "C",
-                    "id": 2,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 2001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 2002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.5",
-                    "platform": "Win 95+",
-                    "version": "5.5",
-                    "grade": "A",
-                    "id": 3,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 3001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 3002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 6",
-                    "platform": "Win 98+",
-                    "version": "6",
-                    "grade": "A",
-                    "id": 4,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 4001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 4002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 7",
-                    "platform": "Win XP SP2+",
-                    "version": "7",
-                    "grade": "A",
-                    "id": 5,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 5001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 5002
-                        }
-                    ]
-                }
-            ]
-        },
-        "body": [
+  "type": "page",
+  "body": {
+    "type": "service",
+    "data": {
+      "rows": [
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 4.0",
+          "platform": "Win 95+",
+          "version": "4",
+          "grade": "X",
+          "id": 1,
+          "children": [
             {
-                "type": "table2",
-                "source": "$rows",
-                "columns": [
-                    {
-                        "name": "engine",
-                        "title": "Engine"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "Grade"
-                    },
-                    {
-                        "name": "browser",
-                        "title": "Browser"
-                    },
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "platform",
-                        "title": "Platform"
-                    }
-                ],
-                "keyField": "id",
-                "draggable": true
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 1001,
+              "children": [
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 4.0",
+                  "platform": "Win 95+",
+                  "version": "4",
+                  "grade": "X",
+                  "id": 10001
+                },
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 5.0",
+                  "platform": "Win 95+",
+                  "version": "5",
+                  "grade": "C",
+                  "id": 10002
+                }
+              ]
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 1002
             }
-        ]
-    }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.0",
+          "platform": "Win 95+",
+          "version": "5",
+          "grade": "C",
+          "id": 2,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 2001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 2002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.5",
+          "platform": "Win 95+",
+          "version": "5.5",
+          "grade": "A",
+          "id": 3,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 3001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 3002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 6",
+          "platform": "Win 98+",
+          "version": "6",
+          "grade": "A",
+          "id": 4,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 4001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 4002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 7",
+          "platform": "Win XP SP2+",
+          "version": "7",
+          "grade": "A",
+          "id": 5,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 5001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 5002
+            }
+          ]
+        }
+      ]
+    },
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "engine",
+            "title": "Engine"
+          },
+          {
+            "name": "grade",
+            "title": "Grade"
+          },
+          {
+            "name": "browser",
+            "title": "Browser"
+          },
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "platform",
+            "title": "Platform"
+          }
+        ],
+        "keyField": "id",
+        "draggable": true
+      }
+    ]
+  }
 }
 ```
 
@@ -1497,56 +1543,56 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"y": 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"y": 200},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "headSummary": [
-                {
-                    "type": "text",
-                    "text": "总计"
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 5
-                }
-            ],
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
-            }
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "headSummary": [
+        {
+          "type": "text",
+          "text": "总计"
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 5
+        }
+      ],
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      }
+    }
+  ]
 }
 ```
 
@@ -1556,65 +1602,65 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"y": 200},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"y": 200},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "headSummary": [
-                [
-                    {
-                        "type": "text",
-                        "text": "总计"
-                    },
-                    {
-                        "type": "tpl",
-                        "tpl": "测试测试",
-                        "colSpan": 5
-                    }
-                ],
-                [
-                    {
-                        "type": "text",
-                        "text": "总结",
-                        "colSpan": 6
-                    }
-                ]
-            ],
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
-            }
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "headSummary": [
+        [
+          {
+            "type": "text",
+            "text": "总计"
+          },
+          {
+            "type": "tpl",
+            "tpl": "测试测试",
+            "colSpan": 5
+          }
+        ],
+        [
+          {
+            "type": "text",
+            "text": "总结",
+            "colSpan": 6
+          }
+        ]
+      ],
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      }
+    }
+  ]
 }
 ```
 
@@ -1624,55 +1670,55 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "bordered": true,
+      "scroll": {"y": 200, "x": 1000},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "bordered": true,
-            "scroll": {"y": 200, "x": 1000},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "fixed": "left"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计",
-                    "fixed": 'left'
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 5
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "fixed": "left"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计",
+          "fixed": 'left'
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 5
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -1682,62 +1728,62 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=10",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "bordered": true,
+      "scroll": {"y": 200, "x": 1000},
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "bordered": true,
-            "scroll": {"y": 200, "x": 1000},
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "fixed": "left"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计",
-                    "colSpan": 6
-                },
-                [
-                    {
-                        "type": "tpl",
-                        "tpl": "测试测试",
-                        "colSpan": 5
-                    },
-                    {
-                        "type": "text",
-                        "text": "总结",
-                        "colSpan": 1
-                    }
-                ]
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "fixed": "left"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计",
+          "colSpan": 6
+        },
+        [
+          {
+            "type": "tpl",
+            "tpl": "测试测试",
+            "colSpan": 5
+          },
+          {
+            "type": "text",
+            "text": "总结",
+            "colSpan": 1
+          }
+        ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1745,50 +1791,49 @@ order: 67
 
 通过设置`resizable`为`true`开启列宽调整功能，开启后可以手动拖动来调整某一列的宽度。
 
+> 注意：`resizable`开启后，固定宽度的列无法拖动调整列宽
+
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "scroll": {"x": 1000},
+      "resizable": true,
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "scroll": {"x": 1000},
-            "resizable": true,
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200,
-                    "align": "center"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "width": 200,
-                    "align": "right"
-                },
-                {
-                    "title": "Grade",
-                    "name": "grade",
-                    "width": 200
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "align": "center"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "width": 50,
+          "align": "center"
+        },
+        {
+          "title": "Grade",
+          "name": "grade"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1800,48 +1845,48 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columnsTogglable": true,
+      "title": "表格的标题",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columnsTogglable": true,
-            "title": "表格的标题",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "width": 200
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200,
-                    "children": [
-                        {
-                            "title": "Grade",
-                            "name": "grade",
-                            "width": 200
-                        }
-                    ]
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "width": 200
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "width": 200
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "width": 200,
+          "children": [
+            {
+              "title": "Grade",
+              "name": "grade",
+              "width": 200
+            }
+          ]
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1851,50 +1896,50 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columnsTogglable": {
+        "icon": "fa fa-user"
+      },
+      "title": "表格的标题",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columnsTogglable": {
-                "icon": "fa fa-user"
-            },
-            "title": "表格的标题",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "width": 200
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200,
-                    "children": [
-                        {
-                            "title": "Grade",
-                            "name": "grade",
-                            "width": 200
-                        }
-                    ]
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "width": 200
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "width": 200
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "width": 200,
+          "children": [
+            {
+              "title": "Grade",
+              "name": "grade",
+              "width": 200
+            }
+          ]
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -1904,45 +1949,45 @@ order: 67
 
 ```schema
 {
-    "type": "table2",
-    "data": {
-        "items": []
+  "type": "table2",
+  "data": {
+    "items": []
+  },
+  "columns": [
+    {
+      "title": "Engine",
+      "name": "engine",
+      "width": 200
     },
-    "columns": [
+    {
+      "title": "Version",
+      "name": "version",
+      "width": 200
+    },
+    {
+      "title": "Browser",
+      "name": "browser",
+      "width": 200,
+      "children": [
         {
-            "title": "Engine",
-            "name": "engine",
-            "width": 200
-        },
-        {
-            "title": "Version",
-            "name": "version",
-            "width": 200
-        },
-        {
-            "title": "Browser",
-            "name": "browser",
-            "width": 200,
-            "children": [
-                {
-                    "title": "Grade",
-                    "name": "grade",
-                    "width": 200
-                }
-            ]
-        },
-        {
-            "title": "Platform",
-            "name": "platform",
-            "children": [
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                }
-            ]
+          "title": "Grade",
+          "name": "grade",
+          "width": 200
         }
-    ],
-    "placeholder": "暂无数据"
+      ]
+    },
+    {
+      "title": "Platform",
+      "name": "platform",
+      "children": [
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        }
+      ]
+    }
+  ],
+  "placeholder": "暂无数据"
 }
 ```
 
@@ -1952,45 +1997,45 @@ order: 67
 
 ```schema
 {
-    "type": "table2",
-    "data": {
-        "items": []
+  "type": "table2",
+  "data": {
+    "items": []
+  },
+  "columns": [
+    {
+      "title": "Engine",
+      "name": "engine",
+      "width": 200
     },
-    "columns": [
+    {
+      "title": "Version",
+      "name": "version",
+      "width": 200
+    },
+    {
+      "title": "Browser",
+      "name": "browser",
+      "width": 200,
+      "children": [
         {
-            "title": "Engine",
-            "name": "engine",
-            "width": 200
+          "title": "Grade",
+          "name": "grade",
+          "width": 200
         },
         {
-            "title": "Version",
-            "name": "version",
-            "width": 200
-        },
-        {
-            "title": "Browser",
-            "name": "browser",
-            "width": 200,
-            "children": [
-                {
-                    "title": "Grade",
-                    "name": "grade",
-                    "width": 200
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText",
-                    "children": [
-                        {
-                            "title": "Platform",
-                            "name": "platform"
-                        }
-                    ]
-                }
-            ]
+          "title": "Badge",
+          "name": "badgeText",
+          "children": [
+            {
+              "title": "Platform",
+              "name": "platform"
+            }
+          ]
         }
-    ],
-    "loading": true
+      ]
+    }
+  ],
+  "loading": true
 }
 ```
 
@@ -2002,199 +2047,199 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "page",
-    "body": {
-        "type": "service",
-        "data": {
-            "rows": [
-                {
-                    "engine": "Trident1",
-                    "browser": "Internet Explorer 4.0",
-                    "platform": "Win 95+",
-                    "version": "4",
-                    "grade": "X",
-                    "id": 1,
-                    "children": [
-                        {
-                            "engine": "Trident1-1",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 1001,
-                            "children": [
-                                {
-                                    "engine": "Trident1-1-1",
-                                    "browser": "Internet Explorer 4.0",
-                                    "platform": "Win 95+",
-                                    "version": "4",
-                                    "grade": "X",
-                                    "id": 10001
-                                },
-                                {
-                                    "engine": "Trident1-1-2",
-                                    "browser": "Internet Explorer 5.0",
-                                    "platform": "Win 95+",
-                                    "version": "5",
-                                    "grade": "C",
-                                    "id": 10002
-                                }
-                            ]
-                        },
-                        {
-                            "engine": "Trident1-2",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 1002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident2",
-                    "browser": "Internet Explorer 5.0",
-                    "platform": "Win 95+",
-                    "version": "5",
-                    "grade": "C",
-                    "id": 2,
-                    "children": [
-                        {
-                            "engine": "Trident2-1",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 2001
-                        },
-                        {
-                            "engine": "Trident2-2",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 2002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.5",
-                    "platform": "Win 95+",
-                    "version": "5.5",
-                    "grade": "A",
-                    "id": 3,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 3001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 3002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 6",
-                    "platform": "Win 98+",
-                    "version": "6",
-                    "grade": "A",
-                    "id": 4,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 4001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 4002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 7",
-                    "platform": "Win XP SP2+",
-                    "version": "7",
-                    "grade": "A",
-                    "id": 5,
-                    "children":[
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 5001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 5002
-                        }
-                    ]
-                }
-            ]
-        },
-        "body": [
+  "type": "page",
+  "body": {
+    "type": "service",
+    "data": {
+      "rows": [
+        {
+          "engine": "Trident1",
+          "browser": "Internet Explorer 4.0",
+          "platform": "Win 95+",
+          "version": "4",
+          "grade": "X",
+          "id": 1,
+          "children": [
             {
-                "type": "table2",
-                "source": "$rows",
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "engine",
-                        "title": "Engine"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "Grade"
-                    },
-                    {
-                        "name": "version",
-                        "title": "Version"
-                    },
-                    {
-                        "name": "browser",
-                        "title": "Browser"
-                    },
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "platform",
-                        "title": "Platform"
-                    }
-                ],
-                "keyField": "id"
+              "engine": "Trident1-1",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 1001,
+              "children": [
+                {
+                  "engine": "Trident1-1-1",
+                  "browser": "Internet Explorer 4.0",
+                  "platform": "Win 95+",
+                  "version": "4",
+                  "grade": "X",
+                  "id": 10001
+                },
+                {
+                  "engine": "Trident1-1-2",
+                  "browser": "Internet Explorer 5.0",
+                  "platform": "Win 95+",
+                  "version": "5",
+                  "grade": "C",
+                  "id": 10002
+                }
+              ]
+            },
+            {
+              "engine": "Trident1-2",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 1002
             }
-        ]
-    }
+          ]
+        },
+        {
+          "engine": "Trident2",
+          "browser": "Internet Explorer 5.0",
+          "platform": "Win 95+",
+          "version": "5",
+          "grade": "C",
+          "id": 2,
+          "children": [
+            {
+              "engine": "Trident2-1",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 2001
+            },
+            {
+              "engine": "Trident2-2",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 2002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.5",
+          "platform": "Win 95+",
+          "version": "5.5",
+          "grade": "A",
+          "id": 3,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 3001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 3002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 6",
+          "platform": "Win 98+",
+          "version": "6",
+          "grade": "A",
+          "id": 4,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 4001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 4002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 7",
+          "platform": "Win XP SP2+",
+          "version": "7",
+          "grade": "A",
+          "id": 5,
+          "children":[
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 5001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 5002
+            }
+          ]
+        }
+      ]
+    },
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "engine",
+            "title": "Engine"
+          },
+          {
+            "name": "grade",
+            "title": "Grade"
+          },
+          {
+            "name": "version",
+            "title": "Version"
+          },
+          {
+            "name": "browser",
+            "title": "Browser"
+          },
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "platform",
+            "title": "Platform"
+          }
+        ],
+        "keyField": "id"
+      }
+    ]
+  }
 }
 ```
 
@@ -2204,203 +2249,203 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "page",
-    "body": {
-        "type": "service",
-        "data": {
-            "rows": [
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 4.0",
-                    "platform": "Win 95+",
-                    "version": "4",
-                    "grade": "X",
-                    "id": 1,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 1001,
-                            "children": [
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 4.0",
-                                    "platform": "Win 95+",
-                                    "version": "4",
-                                    "grade": "X",
-                                    "id": 10001
-                                },
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 5.0",
-                                    "platform": "Win 95+",
-                                    "version": "5",
-                                    "grade": "C",
-                                    "id": 10002
-                                }
-                            ]
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 1002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.0",
-                    "platform": "Win 95+",
-                    "version": "5",
-                    "grade": "C",
-                    "id": 2,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 2001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 2002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.5",
-                    "platform": "Win 95+",
-                    "version": "5.5",
-                    "grade": "A",
-                    "id": 3,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 3001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 3002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 6",
-                    "platform": "Win 98+",
-                    "version": "6",
-                    "grade": "A",
-                    "id": 4,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 4001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 4002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 7",
-                    "platform": "Win XP SP2+",
-                    "version": "7",
-                    "grade": "A",
-                    "id": 5,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 5001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 5002
-                        }
-                    ]
-                }
-            ]
-        },
-        "body": [
+  "type": "page",
+  "body": {
+    "type": "service",
+    "data": {
+      "rows": [
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 4.0",
+          "platform": "Win 95+",
+          "version": "4",
+          "grade": "X",
+          "id": 1,
+          "children": [
             {
-                "type": "table2",
-                "source": "$rows",
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "engine",
-                        "title": "Engine"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "Grade"
-                    },
-                    {
-                        "name": "version",
-                        "title": "Version"
-                    },
-                    {
-                        "name": "browser",
-                        "title": "Browser"
-                    },
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "platform",
-                        "title": "Platform"
-                    }
-                ],
-                "keyField": "id",
-                "rowSelection": {
-                    "type": "checkbox",
-                    "keyField": "id"
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 1001,
+              "children": [
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 4.0",
+                  "platform": "Win 95+",
+                  "version": "4",
+                  "grade": "X",
+                  "id": 10001
+                },
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 5.0",
+                  "platform": "Win 95+",
+                  "version": "5",
+                  "grade": "C",
+                  "id": 10002
                 }
+              ]
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 1002
             }
-        ]
-    }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.0",
+          "platform": "Win 95+",
+          "version": "5",
+          "grade": "C",
+          "id": 2,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 2001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 2002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.5",
+          "platform": "Win 95+",
+          "version": "5.5",
+          "grade": "A",
+          "id": 3,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 3001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 3002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 6",
+          "platform": "Win 98+",
+          "version": "6",
+          "grade": "A",
+          "id": 4,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 4001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 4002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 7",
+          "platform": "Win XP SP2+",
+          "version": "7",
+          "grade": "A",
+          "id": 5,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 5001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 5002
+            }
+          ]
+        }
+      ]
+    },
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "engine",
+            "title": "Engine"
+          },
+          {
+            "name": "grade",
+            "title": "Grade"
+          },
+          {
+            "name": "version",
+            "title": "Version"
+          },
+          {
+            "name": "browser",
+            "title": "Browser"
+          },
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "platform",
+            "title": "Platform"
+          }
+        ],
+        "keyField": "id",
+        "rowSelection": {
+          "type": "checkbox",
+          "keyField": "id"
+        }
+      }
+    ]
+  }
 }
 ```
 
@@ -2410,199 +2455,199 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "page",
-    "body": {
-        "type": "service",
-        "data": {
-            "rows": [
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 4.0",
-                    "platform":  "Win 95+",
-                    "version": "4",
-                    "grade": "X",
-                    "id": 1,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 1001,
-                            "children": [
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 4.0",
-                                    "platform": "Win 95+",
-                                    "version": "4",
-                                    "grade": "X",
-                                    "id": 10001
-                                },
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 5.0",
-                                    "platform": "Win 95+",
-                                    "version": "5",
-                                    "grade": "C",
-                                    "id": 10002
-                                }
-                            ]
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 1002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.0",
-                    "platform": "Win 95+",
-                    "version": "5",
-                    "grade": "C",
-                    "id": 2,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 2001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 2002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.5",
-                    "platform": "Win 95+",
-                    "version": "5.5",
-                    "grade": "A",
-                    "id": 3,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 3001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 3002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 6",
-                    "platform": "Win 98+",
-                    "version": "6",
-                    "grade": "A",
-                    "id": 4,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 4001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 4002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 7",
-                    "platform": "Win XP SP2+",
-                    "version": "7",
-                    "grade": "A",
-                    "id": 5,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 5001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 5002
-                        }
-                    ]
-                }
-            ]
-        },
-        "body": [
+  "type": "page",
+  "body": {
+    "type": "service",
+    "data": {
+      "rows": [
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 4.0",
+          "platform":  "Win 95+",
+          "version": "4",
+          "grade": "X",
+          "id": 1,
+          "children": [
             {
-                "type": "table2",
-                "source": "$rows",
-                "columns": [
-                    {
-                        "name": "engine",
-                        "title": "Engine"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "Grade"
-                    },
-                    {
-                        "name": "version",
-                        "title": "Version"
-                    },
-                    {
-                        "name": "browser",
-                        "title": "Browser"
-                    },
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "platform",
-                        "title": "Platform"
-                    }
-                ],
-                "keyField": "id",
-                "rowSelection": {
-                    "type": "radio",
-                    "keyField": "id"
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 1001,
+              "children": [
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 4.0",
+                  "platform": "Win 95+",
+                  "version": "4",
+                  "grade": "X",
+                  "id": 10001
+                },
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 5.0",
+                  "platform": "Win 95+",
+                  "version": "5",
+                  "grade": "C",
+                  "id": 10002
                 }
+              ]
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 1002
             }
-        ]
-    }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.0",
+          "platform": "Win 95+",
+          "version": "5",
+          "grade": "C",
+          "id": 2,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 2001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 2002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.5",
+          "platform": "Win 95+",
+          "version": "5.5",
+          "grade": "A",
+          "id": 3,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 3001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 3002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 6",
+          "platform": "Win 98+",
+          "version": "6",
+          "grade": "A",
+          "id": 4,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 4001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 4002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 7",
+          "platform": "Win XP SP2+",
+          "version": "7",
+          "grade": "A",
+          "id": 5,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 5001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 5002
+            }
+          ]
+        }
+      ]
+    },
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "engine",
+            "title": "Engine"
+          },
+          {
+            "name": "grade",
+            "title": "Grade"
+          },
+          {
+            "name": "version",
+            "title": "Version"
+          },
+          {
+            "name": "browser",
+            "title": "Browser"
+          },
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "platform",
+            "title": "Platform"
+          }
+        ],
+        "keyField": "id",
+        "rowSelection": {
+          "type": "radio",
+          "keyField": "id"
+        }
+      }
+    ]
+  }
 }
 ```
 
@@ -2612,200 +2657,200 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "page",
-    "body": {
-        "type": "service",
-        "data":{
-            "rows": [
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 4.0",
-                    "platform": "Win 95+",
-                    "version": "4",
-                    "grade": "X",
-                    "id": 1,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 1001,
-                            "children": [
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 4.0",
-                                    "platform": "Win 95+",
-                                    "version": "4",
-                                    "grade": "X",
-                                    "id": 10001
-                                },
-                                {
-                                    "engine": "Trident",
-                                    "browser": "Internet Explorer 5.0",
-                                    "platform": "Win 95+",
-                                    "version": "5",
-                                    "grade": "C",
-                                    "id": 10002
-                                }
-                            ]
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 1002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.0",
-                    "platform": "Win 95+",
-                    "version": "5",
-                    "grade": "C",
-                    "id": 2,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 2001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 2002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 5.5",
-                    "platform": "Win 95+",
-                    "version": "5.5",
-                    "grade": "A",
-                    "id": 3,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 3001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 3002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 6",
-                    "platform": "Win 98+",
-                    "version": "6",
-                    "grade": "A",
-                    "id": 4,
-                    "children": [
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id": 4001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id": 4002
-                        }
-                    ]
-                },
-                {
-                    "engine": "Trident",
-                    "browser": "Internet Explorer 7",
-                    "platform": "Win XP SP2+",
-                    "version": "7",
-                    "grade": "A",
-                    "id":5,
-                    "children":[
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 4.0",
-                            "platform": "Win 95+",
-                            "version": "4",
-                            "grade": "X",
-                            "id":5001
-                        },
-                        {
-                            "engine": "Trident",
-                            "browser": "Internet Explorer 5.0",
-                            "platform": "Win 95+",
-                            "version": "5",
-                            "grade": "C",
-                            "id":5002
-                        }
-                    ]
-                }
-            ]
-        },
-        "body":[
+  "type": "page",
+  "body": {
+    "type": "service",
+    "data":{
+      "rows": [
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 4.0",
+          "platform": "Win 95+",
+          "version": "4",
+          "grade": "X",
+          "id": 1,
+          "children": [
             {
-                "type": "table2",
-                "source": "$rows",
-                "columns":[
-                    {
-                        "name": "engine",
-                        "title": "Engine"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "Grade"
-                    },
-                    {
-                        "name": "version",
-                        "title": "Version"
-                    },
-                    {
-                        "name": "browser",
-                        "title": "Browser"
-                    },
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "platform",
-                        "title": "Platform"
-                    }
-                ],
-                "keyField": "id",
-                "rowSelection":{
-                    "type": "checkbox",
-                    "keyField": "id"
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 1001,
+              "children": [
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 4.0",
+                  "platform": "Win 95+",
+                  "version": "4",
+                  "grade": "X",
+                  "id": 10001
                 },
-                "indentSize": 20
+                {
+                  "engine": "Trident",
+                  "browser": "Internet Explorer 5.0",
+                  "platform": "Win 95+",
+                  "version": "5",
+                  "grade": "C",
+                  "id": 10002
+                }
+              ]
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 1002
             }
-        ]
-    }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.0",
+          "platform": "Win 95+",
+          "version": "5",
+          "grade": "C",
+          "id": 2,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 2001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 2002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 5.5",
+          "platform": "Win 95+",
+          "version": "5.5",
+          "grade": "A",
+          "id": 3,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 3001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 3002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 6",
+          "platform": "Win 98+",
+          "version": "6",
+          "grade": "A",
+          "id": 4,
+          "children": [
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id": 4001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id": 4002
+            }
+          ]
+        },
+        {
+          "engine": "Trident",
+          "browser": "Internet Explorer 7",
+          "platform": "Win XP SP2+",
+          "version": "7",
+          "grade": "A",
+          "id":5,
+          "children":[
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 4.0",
+              "platform": "Win 95+",
+              "version": "4",
+              "grade": "X",
+              "id":5001
+            },
+            {
+              "engine": "Trident",
+              "browser": "Internet Explorer 5.0",
+              "platform": "Win 95+",
+              "version": "5",
+              "grade": "C",
+              "id":5002
+            }
+          ]
+        }
+      ]
+    },
+    "body":[
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns":[
+          {
+            "name": "engine",
+            "title": "Engine"
+          },
+          {
+            "name": "grade",
+            "title": "Grade"
+          },
+          {
+            "name": "version",
+            "title": "Version"
+          },
+          {
+            "name": "browser",
+            "title": "Browser"
+          },
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "platform",
+            "title": "Platform"
+          }
+        ],
+        "keyField": "id",
+        "rowSelection":{
+          "type": "checkbox",
+          "keyField": "id"
+        },
+        "indentSize": 20
+      }
+    ]
+  }
 }
 ```
 
@@ -2815,47 +2860,47 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "width": 200,
-                    "searchable": true
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200,
-                    "children": [
-                        {
-                            "title": "Grade",
-                            "name": "grade",
-                            "width": 200
-                        }
-                    ]
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "width": 200
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "width": 200,
+          "searchable": true
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "width": 200,
+          "children": [
+            {
+              "title": "Grade",
+              "name": "grade",
+              "width": 200
+            }
+          ]
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -2865,48 +2910,48 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "title": "表格的标题",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "title": "表格的标题",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "width": 200
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200,
-                    "children": [
-                        {
-                            "title": "Grade",
-                            "name": "grade",
-                            "width": 200
-                        }
-                    ]
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "sticky": true
+          "title": "Engine",
+          "name": "engine",
+          "width": 200
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "width": 200
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "width": 200,
+          "children": [
+            {
+              "title": "Grade",
+              "name": "grade",
+              "width": 200
+            }
+          ]
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "sticky": true
+    }
+  ]
 }
 ```
 
@@ -2920,70 +2965,70 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "size": "large",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "size": "large",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
+          "title": "Engine",
+          "name": "engine",
+          "sorter": true,
+          "tpl": "${engine|truncate:5}"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "sorter": true,
+          "filterMultiple": true,
+          "filters": [
+            {
+              "text": "Joe",
+              "value": "Joe"
             },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "sorter": true,
-                    "tpl": "${engine|truncate:5}"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "sorter": true,
-                    "filterMultiple": true,
-                    "filters": [
-                        {
-                            "text": "Joe",
-                            "value": "Joe"
-                        },
-                        {
-                            "text": "Jim",
-                            "value": "Jim"
-                        }
-                    ]
-                },
-                {
-                    "type": "tpl",
-                    "title": "Browser",
-                    "name": "browser",
-                    "tpl": "${browser|truncate:5}",
-                    "searchable": true
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计",
-                    "fixed": "left"
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 5
-                }
-            ]
+            {
+              "text": "Jim",
+              "value": "Jim"
+            }
+          ]
+        },
+        {
+          "type": "tpl",
+          "title": "Browser",
+          "name": "browser",
+          "tpl": "${browser|truncate:5}",
+          "searchable": true
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计",
+          "fixed": "left"
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 5
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -2993,69 +3038,69 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
+          "title": "Engine",
+          "name": "engine",
+          "sorter": true,
+          "tpl": "${engine|truncate:5}"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "sorter": true,
+          "filterMultiple": true,
+          "filters": [
+            {
+              "text": "Joe",
+              "value": "Joe"
             },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "sorter": true,
-                    "tpl": "${engine|truncate:5}"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "sorter": true,
-                    "filterMultiple": true,
-                    "filters": [
-                        {
-                            "text": "Joe",
-                            "value": "Joe"
-                        },
-                        {
-                            "text": "Jim",
-                            "value": "Jim"
-                        }
-                    ]
-                },
-                {
-                    "type": "tpl",
-                    "title": "Browser",
-                    "name": "browser",
-                    "tpl": "${engine|truncate:5}",
-                    "searchable": true
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计",
-                    "fixed": "left"
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 5
-                }
-            ]
+            {
+              "text": "Jim",
+              "value": "Jim"
+            }
+          ]
+        },
+        {
+          "type": "tpl",
+          "title": "Browser",
+          "name": "browser",
+          "tpl": "${engine|truncate:5}",
+          "searchable": true
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计",
+          "fixed": "left"
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 5
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -3065,70 +3110,70 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "size": "small",
+      "rowSelection": {
+        "type": "checkbox",
+        "keyField": "id"
+      },
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "size": "small",
-            "rowSelection": {
-                "type": "checkbox",
-                "keyField": "id"
+          "title": "Engine",
+          "name": "engine",
+          "sorter": true,
+          "tpl": "${engine|truncate:5}"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "sorter": true,
+          "filterMultiple": true,
+          "filters": [
+            {
+              "text": "Joe",
+              "value": "Joe"
             },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "sorter": true,
-                    "tpl": "${engine|truncate:5}"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "sorter": true,
-                    "filterMultiple": true,
-                    "filters": [
-                        {
-                            "text": "Joe",
-                            "value": "Joe"
-                        },
-                        {
-                            "text": "Jim",
-                            "value": "Jim"
-                        }
-                    ]
-                },
-                {
-                    "type": "tpl",
-                    "title": "Browser",
-                    "name": "browser",
-                    "tpl": "${engine|truncate:5}",
-                    "searchable": true
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ],
-            "footSummary": [
-                {
-                    "type": "text",
-                    "text": "总计",
-                    "fixed": "left"
-                },
-                {
-                    "type": "tpl",
-                    "tpl": "测试测试",
-                    "colSpan": 5
-                }
-            ]
+            {
+              "text": "Jim",
+              "value": "Jim"
+            }
+          ]
+        },
+        {
+          "type": "tpl",
+          "title": "Browser",
+          "name": "browser",
+          "tpl": "${engine|truncate:5}",
+          "searchable": true
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ],
+      "footSummary": [
+        {
+          "type": "text",
+          "text": "总计",
+          "fixed": "left"
+        },
+        {
+          "type": "tpl",
+          "tpl": "测试测试",
+          "colSpan": 5
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -3138,40 +3183,40 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "title": "表格的标题",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "title": "表格的标题",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine",
-                    "width": 200
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "copyable": true
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "width": 200
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine",
+          "width": 200
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "copyable": true
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "width": 200
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3181,43 +3226,43 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "copyable": true,
-                    "popOver": {
-                        "body": {
-                            "type": "tpl",
-                            "tpl": "详细信息：${browser}"
-                        }
-                    }
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "copyable": true,
+          "popOver": {
+            "body": {
+              "type": "tpl",
+              "tpl": "详细信息：${browser}"
+            }
+          }
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3225,47 +3270,47 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "type": "tpl",
-                    "title": "Browser",
-                    "name": "browser",
-                    "tpl": "${engine|truncate:5}",
-                    "popOver": {
-                        "trigger": "hover",
-                        "position": "left-top",
-                        "showIcon": false,
-                        "body": {
-                            "type": "tpl",
-                            "tpl": "${browser}"
-                        }
-                    }
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "type": "tpl",
+          "title": "Browser",
+          "name": "browser",
+          "tpl": "${engine|truncate:5}",
+          "popOver": {
+            "trigger": "hover",
+            "position": "left-top",
+            "showIcon": false,
+            "body": {
+              "type": "tpl",
+              "tpl": "${browser}"
+            }
+          }
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3273,53 +3318,53 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=6",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=6",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "ID",
-                    "name": "id",
-                    "popOver": {
-                        "body": {
-                            "type": "tpl",
-                            "tpl": "${id}"
-                        }
-                    },
-                    "popOverEnableOn": "this.id == 1"
-                },
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser",
-                    "popOver": {
-                        "body": {
-                            "type": "tpl",
-                            "tpl": "${browser}"
-                        }
-                    }
-                },
-                {
-                    "title": "Badge",
-                    "name": "badgeText"
-                },
-                {
-                    "title": "Platform",
-                    "name": "platform"
-                }
-            ]
+          "title": "ID",
+          "name": "id",
+          "popOver": {
+            "body": {
+              "type": "tpl",
+              "tpl": "${id}"
+            }
+          },
+          "popOverEnableOn": "this.id == 1"
+        },
+        {
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        },
+        {
+          "title": "Browser",
+          "name": "browser",
+          "popOver": {
+            "body": {
+              "type": "tpl",
+              "tpl": "${browser}"
+            }
+          }
+        },
+        {
+          "title": "Badge",
+          "name": "badgeText"
+        },
+        {
+          "title": "Platform",
+          "name": "platform"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3343,66 +3388,66 @@ order: 67
       "visibleOn": "this.badgeText"
     },
     "columns": [
-        {
-            "name": "id",
-            "title": "ID",
-            "searchable": {
-              "type": "input-text",
-              "name": "id",
-              "label": "主键",
-              "placeholder": "输入id",
-              "size": "sm",
-            }
-        },
-        {
-            "name": "engine",
-            "title": "Rendering engine"
-        },
-        {
-            "name": "browser",
-            "title": "Browser",
-            "searchable": {
-              "type": "select",
-              "name": "browser",
-              "label": "浏览器",
-              "placeholder": "选择浏览器",
-              "size": "sm",
-              "options": [
-                {
-                  "label": "Internet Explorer ",
-                  "value": "ie"
-                },
-                {
-                  "label": "AOL browser",
-                  "value": "aol"
-                },
-                {
-                  "label": "Firefox",
-                  "value": "firefox"
-                }
-              ]
-            }
-        },
-        {
-            "name": "platform",
-            "title": "Platform(s)"
-        },
-        {
-            "name": "version",
-            "title": "Engine version",
-            "searchable": {
-              "type": "input-number",
-              "name": "version",
-              "label": "版本号",
-              "placeholder": "输入版本号",
-              "size": "sm",
-              "mode": "horizontal"
-            }
-        },
-        {
-            "name": "grade",
-            "title": "CSS grade"
+      {
+        "name": "id",
+        "title": "ID",
+        "searchable": {
+          "type": "input-text",
+          "name": "id",
+          "label": "主键",
+          "placeholder": "输入id",
+          "size": "sm",
         }
+      },
+      {
+        "name": "engine",
+        "title": "Rendering engine"
+      },
+      {
+        "name": "browser",
+        "title": "Browser",
+        "searchable": {
+          "type": "select",
+          "name": "browser",
+          "label": "浏览器",
+          "placeholder": "选择浏览器",
+          "size": "sm",
+          "options": [
+            {
+              "label": "Internet Explorer ",
+              "value": "ie"
+            },
+            {
+              "label": "AOL browser",
+              "value": "aol"
+            },
+            {
+              "label": "Firefox",
+              "value": "firefox"
+            }
+          ]
+        }
+      },
+      {
+        "name": "platform",
+        "title": "Platform(s)"
+      },
+      {
+        "name": "version",
+        "title": "Engine version",
+        "searchable": {
+          "type": "input-number",
+          "name": "version",
+          "label": "版本号",
+          "placeholder": "输入版本号",
+          "size": "sm",
+          "mode": "horizontal"
+        }
+      },
+      {
+        "name": "grade",
+        "title": "CSS grade"
+      }
     ]
   },
   data: {
@@ -3518,8 +3563,8 @@ order: 67
         "type": "table2",
         "source": "$rows",
         "quickSaveApi": {
-            "url": "/api/mock2/sample/bulkUpdate",
-            "method": "put"
+          "url": "/api/mock2/sample/bulkUpdate",
+          "method": "put"
         },
         "columns": [
           {
@@ -3554,39 +3599,39 @@ order: 67
 {
   "type": "page",
   "body": {
-        "type": "service",
-        "api": "/api/sample?perPage=5",
-        "body": [
-            {
-                "type": "table2",
-                "source": "$rows",
-                "quickSaveApi": {
-                    "url": "/api/mock2/sample/bulkUpdate",
-                    "method": "put"
-                },
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "CSS grade",
-                        "quickEdit": {
-                            "type": "select",
-                            "options": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "X"
-                            ]
-                        }
-                    }
-                ]
+    "type": "service",
+    "api": "/api/sample?perPage=5",
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "quickSaveApi": {
+          "url": "/api/mock2/sample/bulkUpdate",
+          "method": "put"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "grade",
+            "title": "CSS grade",
+            "quickEdit": {
+              "type": "select",
+              "options": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "X"
+              ]
             }
+          }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
@@ -3596,50 +3641,49 @@ order: 67
 {
   "type": "page",
   "body": {
-        "type": "service",
-        "api": "/api/sample?perPage=5",
-        "body": [
-            {
-                "type": "table2",
-                "source": "$rows",
-                "quickSaveApi": {
-                    "url": "/api/mock2/sample/bulkUpdate",
-                    "method": "put"
+    "type": "service",
+    "api": "/api/sample?perPage=5",
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "quickSaveApi": {
+          "url": "/api/mock2/sample/bulkUpdate",
+          "method": "put"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "grade",
+            "title": "CSS grade",
+            "quickEdit": {
+              "body": [
+                {
+                  "type": "select",
+                  "name": "grade",
+                  "options": [
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "X"
+                  ]
                 },
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "CSS grade",
-                        "quickEdit": {
-                            "body": [
-                                {
-                                    "type": "select",
-                                    "name": "grade",
-                                    "options": [
-                                        "A",
-                                        "B",
-                                        "C",
-                                        "D",
-                                        "X"
-                                    ]
-                                },
-
-                                {
-                                    "label": "id",
-                                    "type": "input-text",
-                                    "name": "id"
-                                }
-                            ]
-                        }
-                    }
-                ]
+                {
+                  "label": "id",
+                  "type": "input-text",
+                  "name": "id"
+                }
+              ]
             }
+          }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
@@ -3651,51 +3695,51 @@ order: 67
 {
   "type": "page",
   "body": {
-        "type": "service",
-        "api": "/api/sample?perPage=5",
-        "body": [
-            {
-                "type": "table2",
-                "source": "$rows",
-                "quickSaveApi": {
-                    "url": "/api/mock2/sample/bulkUpdate",
-                    "method": "put"
-                },
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "CSS grade",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "select",
-                            "size": "xs",
-                            "options": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "X"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "switch",
-                        "title": "switch",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "switch",
-                            "onText": "开启",
-                            "offText": "关闭"
-                        }
-                    }
-                ]
+    "type": "service",
+    "api": "/api/sample?perPage=5",
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "quickSaveApi": {
+          "url": "/api/mock2/sample/bulkUpdate",
+          "method": "put"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "grade",
+            "title": "CSS grade",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "select",
+              "size": "xs",
+              "options": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "X"
+              ]
             }
+          },
+          {
+            "name": "switch",
+            "title": "switch",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "switch",
+              "onText": "开启",
+              "offText": "关闭"
+            }
+          }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
@@ -3707,53 +3751,53 @@ order: 67
 {
   "type": "page",
   "body": {
-        "type": "service",
-        "api": "/api/sample?perPage=5",
-        "body": [
-            {
-                "type": "table2",
-                "source": "$rows",
-                "quickSaveItemApi": {
-                    "url": "/api/mock2/sample/$id",
-                    "method": "put"
-                },
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "CSS grade",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "select",
-                            "size": "xs",
-                            "options": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "X"
-                            ],
-                            "saveImmediately": true
-                        }
-                    },
-                    {
-                        "name": "switch",
-                        "title": "switch",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "switch",
-                            "onText": "开启",
-                            "offText": "关闭",
-                            "saveImmediately": true
-                        }
-                    }
-                ]
+    "type": "service",
+    "api": "/api/sample?perPage=5",
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "quickSaveItemApi": {
+          "url": "/api/mock2/sample/$id",
+          "method": "put"
+        },
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "grade",
+            "title": "CSS grade",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "select",
+              "size": "xs",
+              "options": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "X"
+              ],
+              "saveImmediately": true
             }
+          },
+          {
+            "name": "switch",
+            "title": "switch",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "switch",
+              "onText": "开启",
+              "offText": "关闭",
+              "saveImmediately": true
+            }
+          }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
@@ -3763,53 +3807,53 @@ order: 67
 {
   "type": "page",
   "body": {
-        "type": "service",
-        "api": "/api/sample?perPage=5",
-        "body": [
-            {
-                "type": "table2",
-                "source": "$rows",
-                "columns": [
-                    {
-                        "name": "id",
-                        "title": "ID"
-                    },
-                    {
-                        "name": "grade",
-                        "title": "CSS grade",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "select",
-                            "size": "xs",
-                            "options": [
-                                "A",
-                                "B",
-                                "C",
-                                "D",
-                                "X"
-                            ],
-                            "saveImmediately": {
-                                "api": "/api/mock2/sample/$id"
-                            }
-                        }
-                    },
-                    {
-                        "name": "switch",
-                        "title": "switch",
-                        "quickEdit": {
-                            "mode": "inline",
-                            "type": "switch",
-                            "onText": "开启",
-                            "offText": "关闭",
-                            "saveImmediately": {
-                                "api": "/api/mock2/sample/$id"
-                            }
-                        }
-                    }
-                ]
+    "type": "service",
+    "api": "/api/sample?perPage=5",
+    "body": [
+      {
+        "type": "table2",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "id",
+            "title": "ID"
+          },
+          {
+            "name": "grade",
+            "title": "CSS grade",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "select",
+              "size": "xs",
+              "options": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "X"
+              ],
+              "saveImmediately": {
+                "api": "/api/mock2/sample/$id"
+              }
             }
+          },
+          {
+            "name": "switch",
+            "title": "switch",
+            "quickEdit": {
+              "mode": "inline",
+              "type": "switch",
+              "onText": "开启",
+              "offText": "关闭",
+              "saveImmediately": {
+                "api": "/api/mock2/sample/$id"
+              }
+            }
+          }
         ]
-    }
+      }
+    ]
+  }
 }
 ```
 
@@ -3819,36 +3863,36 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "className": "text-primary"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "className": "text-primary"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3856,37 +3900,37 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "className": "text-primary",
-                    "titleClassName": "font-bold"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "className": "text-primary",
+          "titleClassName": "font-bold"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3896,36 +3940,36 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "columns": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version",
-                    "classNameExpr": "<%= data.version > 5 ? 'text-danger' : '' %>"
-                },
-                {
-                    "title": "Browser",
-                    "name": "browser"
-                },
-                {
-                    "title": "Operation",
-                    "name": "operation",
-                    "type": "button",
-                    "label": "删除",
-                    "size": "sm"
-                }
-            ]
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version",
+          "classNameExpr": "${ version > 5 ? 'text-danger' : '' }"
+        },
+        {
+          "title": "Browser",
+          "name": "browser"
+        },
+        {
+          "title": "Operation",
+          "name": "operation",
+          "type": "button",
+          "label": "删除",
+          "size": "sm"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
@@ -3935,42 +3979,42 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=5",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=5",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "itemActions": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "itemActions": [
-                {
-                    "label": "编辑",
-                    "type": "button",
-                    "actionType": "dialog",
-                    "dialog": {
-                        "title": "编辑",
-                        "body": "这是个简单的编辑弹框"
-                    }
-                },
-                {
-                    "label": "删除",
-                    "type": "button",
-                    "actionType": "ajax",
-                    "confirmText": "确认要删除？",
-                    "api": "/api/mock2/form/saveForm"
-                }
-            ],
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                }
-            ]
+          "label": "编辑",
+          "type": "button",
+          "actionType": "dialog",
+          "dialog": {
+            "title": "编辑",
+            "body": "这是个简单的编辑弹框"
+          }
+        },
+        {
+          "label": "删除",
+          "type": "button",
+          "actionType": "ajax",
+          "confirmText": "确认要删除？",
+          "api": "/api/mock2/form/saveForm"
         }
-    ]
+      ],
+      "columns": [
+        {
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -3978,45 +4022,45 @@ order: 67
 
 ```schema: scope="body"
 {
-    "type": "service",
-    "api": "/api/sample?perPage=20",
-    "body": [
+  "type": "service",
+  "api": "/api/sample?perPage=20",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "itemActions": [
         {
-            "type": "table2",
-            "source": "$rows",
-            "itemActions": [
-                {
-                    "label": "编辑",
-                    "type": "button",
-                    "actionType": "dialog",
-                    "dialog": {
-                        "title": "编辑",
-                        "body": "这是个简单的编辑弹框"
-                    }
-                },
-                {
-                    "label": "删除",
-                    "type": "button",
-                    "actionType": "ajax",
-                    "confirmText": "确认要删除？",
-                    "api": "/api/mock2/form/saveForm"
-                }
-            ],
-            "scroll": {
-                "y": 100
-            },
-            "columns": [
-                {
-                    "title": "Engine",
-                    "name": "engine"
-                },
-                {
-                    "title": "Version",
-                    "name": "version"
-                }
-            ]
+          "label": "编辑",
+          "type": "button",
+          "actionType": "dialog",
+          "dialog": {
+            "title": "编辑",
+            "body": "这是个简单的编辑弹框"
+          }
+        },
+        {
+          "label": "删除",
+          "type": "button",
+          "actionType": "ajax",
+          "confirmText": "确认要删除？",
+          "api": "/api/mock2/form/saveForm"
         }
-    ]
+      ],
+      "scroll": {
+        "y": 100
+      },
+      "columns": [
+        {
+          "title": "Engine",
+          "name": "engine"
+        },
+        {
+          "title": "Version",
+          "name": "version"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -4050,6 +4094,7 @@ order: 67
 | affixRow         | `Array`                                                  |                           | 底部总结行                                                                |
 | itemBadge        | [`BadgeSchema`](./badge)                                 |                           | 行角标配置                                                                |
 | autoFillHeight   | `boolean` 丨 `{height: number}` 丨 `{maxHeight: number}` |                           | 内容区域自适应高度，可选择自适应、固定高度和最大高度                      |
+| lazyRenderAfter  | `number`                                                 | 100                       | 默认数据超过 100 条启动懒加载提升渲染性能，也可通过自定义该属性调整数值   |
 
 ## 行配置属性表
 
@@ -4098,3 +4143,1268 @@ order: 67
 | searchable | `boolean` \| `Schema`                         | `false` | 是否可快速搜索   |
 | width      | `number` \| `string`                          | 列宽    |
 | remark     |                                               |         | 提示信息         |
+
+## 事件表
+
+当前组件会对外派发以下事件，可以通过`onEvent`来监听这些事件，并通过`actions`来配置执行的动作，在`actions`中可以通过`${事件参数名}`或`${event.data.[事件参数名]}`来获取事件产生的数据，详细查看[事件动作](../../docs/concepts/event-action)。
+
+| 事件名称       | 事件参数                                                                | 说明                 |
+| -------------- | ----------------------------------------------------------------------- | -------------------- |
+| selectedChange | `selectedItems: item[]` 已选择行<br/>`unSelectedItems: item[]` 未选择行 | 手动选择表格项时触发 |
+| columnSort     | `orderBy: string` 列排序列名<br/>`orderDir: string` 列排序值            | 点击列排序时触发     |
+| columnFilter   | `filterName: string` 列筛选列名<br/>`filterValue: string` 列筛选值      | 点击列筛选时触发     |
+| columnSearch   | `searchName: string` 列搜索列名<br/>`searchValue: string` 列搜索数据    | 点击列搜索时触发     |
+| orderChange    | `movedItems: item[]` 已排序数据                                         | 手动拖拽行排序时触发 |
+| columnToggled  | `columns: item[]` 当前显示的列配置数据                                  | 点击自定义列时触发   |
+| rowClick       | `item: object` 行点击数据<br/>`index: number` 行索引                    | 单击整行时触发       |
+| rowDbClick     | `item: object` 行点击数据<br/>`index: number` 行索引                    | 双击整行时触发       |
+| rowMouseEnter  | `item: object` 行移入数据<br/>`index: number` 行索引                    | 移入整行时触发       |
+| rowMouseLeave  | `item: object` 行移出数据<br/>`index: number` 行索引                    | 移出整行时触发       |
+
+### selectedChange
+
+在开启批量操作后才会用到，可以尝试勾选列表的行记录。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "selectable": true,
+      "onEvent": {
+        "selectedChange": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msg": "已选择${event.data.selectedItems.length}条记录"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID"
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine"
+        },
+        {
+          "name": "browser",
+          "label": "Browser"
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### columnSort
+
+列排序，可以尝试点击`Browser`列右侧的排序图标。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "columnSort": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "orderBy：${event.data.orderBy},orderDir：${event.data.orderDir}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### columnFilter
+
+列过滤，可以尝试点击`Rendering engine`列右侧的筛选图标。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "columnFilter": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "filterName：${event.data.filterName},filterValue：${event.data.filterValue}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### columnSearch
+
+列检索，，可以尝试点击`ID`列右侧的检索图标。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "columnSearch": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "searchName：${event.data.searchName},searchValue：${event.data.searchValue|json}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+            "name": "version",
+            "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### columnToggled
+
+点击自定义列，可以尝试修改`自定义列`的配置。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "columnToggled": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "当前显示${event.data.columns.length}列"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### orderChange
+
+在开启拖拽排序行记录后才会用到，排序确认后触发。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "draggable": true,
+      "onEvent": {
+        "orderChange": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "${event.data.movedItems.length}行发生移动"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### rowClick
+
+点击行记录。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "selectable": true,
+      "onEvent": {
+        "rowClick": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "行单击数据：${event.data.item|json}；行索引：${event.data.index}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### rowDbClick
+
+双击整行时触发。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "rowDbClick": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "行双击数据：${event.data.item|json}；行索引：${event.data.index}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### rowMouseEnter
+
+鼠标移入行记录。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "rowMouseEnter": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "行索引：${event.data.index}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### rowMouseLeave
+
+鼠标移出行记录。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table2",
+      "source": "$rows",
+      "onEvent": {
+        "rowMouseLeave": {
+          "actions": [
+            {
+              "actionType": "toast",
+              "args": {
+                "msgType": "info",
+                "msg": "行索引：${event.data.index}"
+              }
+            }
+          ]
+        }
+      },
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 列的事件表
+
+表格的默认列定义的事件如下，即 click、mouseenter、mouseleave。如果列定义是其他组件，则事件表就是这个组件对应的事件表，例如列定义是 Switch 组件，则可以监听 [Switch 的 change 事件](./form/switch#%E4%BA%8B%E4%BB%B6%E8%A1%A8)。
+
+| 事件名称   | 事件参数                            | 说明                                           |
+| ---------- | ----------------------------------- | ---------------------------------------------- |
+| click      | `[columnName]: string` 对应列名的值 | 监听表格列点击事件，表格数据点击时触发         |
+| mouseenter | `[columnName]: string` 对应列名的值 | 监听表格列鼠标移入事件，表格数据鼠标移入时触发 |
+| mouseleave | `[columnName]: string` 对应列名的值 | 监听表格列鼠标移出事件，表格数据鼠标移出时触发 |
+
+可以尝试点击某行的`Rendering engine`列数据、鼠标移入某行的`Browser`列数据。
+
+```schema: scope="body"
+{
+  "type": "service",
+  "api": "/api/mock2/sample?perPage=10",
+  "body": [
+    {
+      "type": "table",
+      "source": "$rows",
+      "columns": [
+        {
+          "name": "id",
+          "label": "ID",
+          "searchable": true
+        },
+        {
+          "name": "engine",
+          "label": "Rendering engine",
+          "filterable": {
+            "options": [
+              "Internet Explorer 4.0",
+              "Internet Explorer 5.0"
+            ]
+          },
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "toast",
+                  "args": {
+                    "msgType": "info",
+                    "msg": "第${event.data.index}行的${event.data.engine}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "browser",
+          "label": "Browser",
+          "sortable": true,
+          "onEvent": {
+            "mouseenter": {
+              "actions": [
+                {
+                  "actionType": "toast",
+                  "args": {
+                    "msgType": "info",
+                    "msg": "第${event.data.index}行的${event.data.browser}"
+                  }
+                }
+              ]
+            },
+            "mouseleave": {
+              "actions": [
+                {
+                  "actionType": "toast",
+                  "args": {
+                    "msgType": "info",
+                    "msg": "第${event.data.index}行的${event.data.browser}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "platform",
+          "label": "Platform(s)"
+        },
+        {
+          "name": "version",
+          "label": "Engine version"
+        },
+        {
+          "name": "grade",
+          "label": "CSS grade"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 动作表
+
+当前组件对外暴露以下特性动作，其他组件可以通过指定`actionType: 动作名称`、`componentId: 该组件id`来触发这些动作，动作配置可以通过`args: {动作配置项名称: xxx}`来配置具体的参数，详细请查看[事件动作](../../docs/concepts/event-action#触发其他组件的动作)。
+
+| 动作名称  | 动作配置                                                                                                         | 说明               |
+| --------- | ---------------------------------------------------------------------------------------------------------------- | ------------------ |
+| select    | `selected: string` 条件表达式，表达式中可以访问变量`record:行数据`和`rowIndex:行索引`，例如: data.rowIndex === 1 | 设置表格的选中项   |
+| selectAll | -                                                                                                                | 设置表格全部项选中 |
+| clearAll  | -                                                                                                                | 清空表格所有选中项 |
+| setValue  | `value: object`                                                                                                  | 更新列表记录       |
+
+value 结构说明：
+
+| 属性名        | 类型     | 默认值 | 说明     |
+| ------------- | -------- | ------ | -------- |
+| items 或 rows | `item[]` |        | 列表记录 |
+
+### select
+
+```schema: scope="body"
+[
+  {
+    "type": "button-toolbar",
+    "className": "m-b",
+    "buttons": [
+      {
+        "name": "trigger1",
+        "id": "trigger1",
+        "type": "action",
+        "label": "设置表格第一项选中",
+        "className": "ml-2",
+        "onEvent": {
+          "click": {
+            "actions": [
+              {
+                "actionType": "select",
+                "componentId": "table-select",
+                "description": "点击设置指定表格第一项内容选中",
+                "args": {
+                  "selected": "data.rowIndex === 0"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "trigger2",
+        "id": "trigger2",
+        "type": "action",
+        "label": "设置表格第三项选中",
+        "className": "ml-2",
+        "onEvent": {
+          "click": {
+            "actions": [
+              {
+                "actionType": "select",
+                "componentId": "table-select",
+                "description": "点击设置指定表格第三项内容选中",
+                "args": {
+                  "selectedRowKeysExpr": "data.rowIndex === 2"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "trigger3",
+        "id": "trigger3",
+        "type": "action",
+        "label": "清空选中项",
+        "onEvent": {
+          "click": {
+            "actions": [
+              {
+                "actionType": "clearAll",
+                "componentId": "table-select",
+                "description": "清空选中项"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "service",
+    "api": "/api/mock2/sample?perPage=10",
+    "body": [
+      {
+        "id": "table-select",
+        "type": "table2",
+        "source": "$rows",
+        "selectable": true,
+        "multiple": true,
+        "columns": [
+          {
+            "name": "id",
+            "label": "ID"
+          },
+          {
+            "name": "browser",
+            "label": "Browser"
+          },
+          {
+            "name": "version",
+            "label": "Version"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+### selectAll
+
+```schema: scope="body"
+[
+  {
+    "type": "button-toolbar",
+    "className": "m-b",
+    "buttons": [
+      {
+        "name": "trigger2",
+        "id": "trigger2",
+        "type": "action",
+        "label": "设置表格全部项选中",
+        "onEvent": {
+          "click": {
+            "actions": [
+              {
+                "actionType": "selectAll",
+                "componentId": "table-select",
+                "description": "点击设置指定表格全部内容选中"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "service",
+    "api": "/api/mock2/sample?perPage=10",
+    "body": [
+      {
+        "id": "table-select",
+        "type": "table2",
+        "source": "$rows",
+        "selectable": true,
+        "multiple": true,
+        "columns": [
+          {
+            "name": "id",
+            "label": "ID"
+          },
+          {
+            "name": "browser",
+            "label": "Browser"
+          },
+          {
+            "name": "version",
+            "label": "Version"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+### clearAll
+
+```schema: scope="body"
+[
+  {
+    "type": "button-toolbar",
+    "className": "m-b",
+    "buttons": [
+      {
+        "name": "trigger3",
+        "id": "trigger3",
+        "type": "action",
+        "label": "清空表格全部选中项",
+        "onEvent": {
+        "click": {
+            "actions": [
+              {
+                "actionType": "clearAll",
+                "componentId": "table-select",
+                "description": "点击设置指定表格全部选中项清空"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "type": "service",
+    "api": "/api/mock2/sample?perPage=10",
+    "body": [
+      {
+        "id": "table-select",
+        "type": "table2",
+        "source": "$rows",
+        "selectable": true,
+        "multiple": true,
+        "columns": [
+          {
+            "name": "id",
+            "label": "ID"
+          },
+          {
+            "name": "browser",
+            "label": "Browser"
+          },
+          {
+            "name": "version",
+            "label": "Version"
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+### setValue
+
+#### 更新列表记录
+
+```schema: scope="body"
+[
+  {
+    "type": "button",
+    "label": "更新列表记录",
+    "onEvent": {
+      "click": {
+        "actions": [
+          {
+            "actionType": "setValue",
+            "componentId": "table_setvalue",
+            "args": {
+              "value": {
+                "items": [
+                  {
+                    "engine": "Trident - f12fj",
+                    "browser": "Internet Explorer 4.0",
+                    "platform": "Win 95+",
+                    "version": "4",
+                    "grade": "X",
+                    "badgeText": "默认",
+                    "id": 1
+                  },
+                  {
+                    "engine": "Trident - oqvc0e",
+                    "browser": "Internet Explorer 5.0",
+                    "platform": "Win 95+",
+                    "version": "5",
+                    "grade": "C",
+                    "badgeText": "危险",
+                    "id": 2
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "button",
+    "label": "清空列表",
+    "className": "ml-2",
+    "onEvent": {
+      "click": {
+        "actions": [
+          {
+            "actionType": "setValue",
+            "componentId": "table_setvalue",
+            "args": {
+              "value": {
+                "items": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "button",
+    "label": "清空选中项",
+    "className": "ml-2",
+    "onEvent": {
+      "click": {
+        "actions": [
+          {
+            "actionType": "clearAll",
+            "componentId": "table_setvalue"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "service",
+    "id": "u:b25a8ef0050b",
+    "api": {
+      "method": "get",
+      "url": "/api/mock2/sample?perPage=5"
+    },
+    "body": [
+      {
+        "type": "table2",
+        "id": "table_setvalue",
+        "title": "引擎列表",
+        "source": "$rows",
+        "columns": [
+          {
+            "name": "engine",
+            "label": "Engine",
+            "id": "u:4aa2e9034698",
+            "inline": true
+          },
+          {
+            "name": "version",
+            "label": "Version",
+            "id": "u:8b4cb96ca2bf",
+            "inline": true,
+            "tpl": "v${version}"
+          }
+        ],
+        "selectable": true,
+        "multiple": true
+      }
+    ]
+  }
+]
+```
+
+#### 更新指定行记录
+
+可以通过指定`index`或者`condition`来分别更新指定索引的行记录和指定满足条件（条件表达式或者 ConditionBuilder）的行记录，另外`replace`同样生效，即可以完全替换指定行记录，也可以对指定行记录做合并。
+
+```schema
+{
+  "type": "page",
+  "data": {
+    i: '1,3'
+  },
+  body: [
+    {
+      "type": "container",
+      "className": "mb-2",
+      "body": [
+        {
+          "type": "button",
+          "label": "更新index为1和3的行记录",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "setValue",
+                  "componentId": "table_setvalue_item",
+                  "args": {
+                    "value": {
+                      "engine": "amis",
+                      "browser": "Chrome",
+                      "platform": "Mac Pro",
+                      "version": "8",
+                      "grade": "Y",
+                      "badgeText": "你好！",
+                      "id": 1234
+                    },
+                    "index": "${i}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "button",
+          "label": "更新index为1和3的行记录(替换)",
+          "className": "ml-2",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "setValue",
+                  "componentId": "table_setvalue_item",
+                  "args": {
+                    "value": {
+                      "engine": "amis",
+                      "id": 1234
+                    },
+                    "index": "${i}",
+                    "replace": true
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "body": [
+        {
+          "type": "button",
+          "label": "更新version=7的行记录",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "setValue",
+                  "componentId": "table_setvalue_item",
+                  "args": {
+                    "value": {
+                      "engine": "amis",
+                      "browser": "Chrome",
+                      "platform": "Mac Pro",
+                      "version": "4",
+                      "grade": "Y",
+                      "badgeText": "你好！",
+                      "id": 1234
+                    },
+                    "condition": "${version === '7'}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "button",
+          "label": "更新version=4的行记录",
+          "className": "ml-2",
+          "onEvent": {
+            "click": {
+              "actions": [
+                {
+                  "actionType": "setValue",
+                  "componentId": "table_setvalue_item",
+                  "args": {
+                    "value": {
+                      "engine": "amis",
+                      "browser": "Chrome",
+                      "platform": "Mac Pro",
+                      "version": "4",
+                      "grade": "Y",
+                      "badgeText": "你好！",
+                      "id": 1234
+                    },
+                    "condition": {
+                      conjunction: 'and',
+                      children: [
+                        {
+                          left: {
+                            type: 'field',
+                            field: 'version'
+                          },
+                          op: 'equal',
+                          right: "4"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "service",
+      "id": "u:b25a8ef0050b",
+      "api": {
+        "method": "get",
+        "url": "/api/mock2/sample?perPage=5"
+      },
+      "body": [
+        {
+          "type": "table2",
+          "id": "table_setvalue_item",
+          "title": "引擎列表",
+          "source": "$rows",
+          "columns": [
+            {
+              "name": "engine",
+              "label": "Engine",
+              "id": "u:4aa2e9034698",
+              "inline": true
+            },
+            {
+              "name": "version",
+              "label": "Version",
+              "id": "u:8b4cb96ca2bf",
+              "inline": true,
+              "tpl": "${version}"
+            }
+          ],
+          "selectable": true,
+          "multiple": true
+        }
+      ]
+    }
+  ]
+}
+```

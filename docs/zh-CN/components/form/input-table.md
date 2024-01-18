@@ -790,7 +790,7 @@ order: 54
         "name": "table",
         "addable": true,
         "editable": true,
-        "rowClassNameExpr": "<%= data.a === 'a' ? 'bg-success' : '' %>",
+        "rowClassNameExpr": "${ a === 'a' ? 'bg-success' : '' }",
         "columns": [
           {
             "name": "a",
@@ -905,7 +905,7 @@ order: 54
 
 | 事件名称      | 事件参数                                                                                                                                                  | 说明                                                                 |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| add           | `[name]: object[]` 列表记录                                                                                                                               | 点击左下角添加按钮 或 某一行右侧操作栏添加按钮时触发                 |
+| add           | `index: number` 新增行记录索引 <br /> `[name]: object[]` 列表记录                                                                                         | 点击左下角添加按钮 或 某一行右侧操作栏添加按钮时触发                 |
 | addConfirm    | `index: number` 新增行记录索引 <br /> `item: object` 新增行记录 <br/> `[name]: object[]`列表记录                                                          | 开启`needConfirm`，点击添加按钮，填入数据后点击“保存”按钮后触发      |
 | addSuccess    | `index: number` 新增行记录索引 <br /> `item: object` 新增行记录 <br/> `[name]: object[]`列表记录                                                          | 开启`needConfirm`并且配置`addApi`，点击“保存”后调用接口成功时触发    |
 | addFail       | `index: number` 新增行记录索引 <br /> `item: object` 新增行记录 <br/> `[name]: object[]`列表记录<br />`error: object` `addApi`请求失败后返回的错误信息    | 开启`needConfirm`并且配置`addApi`，点击“保存”后调用接口失败时触发    |
@@ -1901,6 +1901,7 @@ order: 54
     {
       "type": "button",
       "label": "新增一行（未指定添加位置）",
+      "className": "mr-2",
       "onEvent": {
         "click": {
           "actions": [
@@ -1985,6 +1986,7 @@ order: 54
     {
       "type": "button",
       "label": "删除行（指定行号）",
+      "className": "mr-2",
       "onEvent": {
         "click": {
           "actions": [
@@ -2184,6 +2186,7 @@ order: 54
     {
       "type": "button",
       "label": "更新index为1和3的行记录",
+      "className": "mr-2",
       "onEvent": {
         "click": {
           "actions": [
@@ -2205,6 +2208,7 @@ order: 54
     {
       "type": "button",
       "label": "更新a=a3的行记录",
+      "className": "mr-2",
       "onEvent": {
         "click": {
           "actions": [
@@ -2309,6 +2313,74 @@ order: 54
         "id": 5,
         "a": "a5",
         "b": "b5"
+      }
+    ]
+  }
+}
+```
+
+#### 行记录内表单项联动
+
+需要通过表达式配置动态 `id` 和 `componentId`。
+
+```schema: scope="body"
+{
+  "type": "form",
+  "api": "/api/mock2/form/saveForm",
+  "body": [
+    {
+      "type": "input-table",
+      "label": "表格表单",
+      "id": "setValue-input-table",
+      "name": "table",
+      "columns": [
+        {
+          "type": "input-number",
+          "name": "num1",
+          "label": "数量",
+          "onEvent": {
+            "change": {
+              "actions": [
+                {
+                  "actionType": "setValue",
+                  "componentId": "num2_${index}",
+                  "args": {
+                    "value": "${num1 * 10}"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "num2",
+          "id": "num2_${index}",
+          "label": "金额"
+        }
+      ],
+      "addable": true,
+      "footerAddBtn": {
+        "label": "新增",
+        "icon": "fa fa-plus",
+        "hidden": true
+      },
+      "strictMode": true,
+      "minLength": 0,
+      "needConfirm": false,
+      "showTableAddBtn": false
+    }
+  ],
+  "data": {
+    "table": [
+      {
+        "id": 1,
+        "num1": 1,
+        "num2": "10"
+      },
+      {
+        "id": 2,
+        "num1": "2",
+        "num2": 20
       }
     ]
   }

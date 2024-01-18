@@ -38,6 +38,7 @@ register('de-DE', {
   'Copyable.tip': 'Kopieren',
   'CRUD.exportCSV': 'In CSV exportieren',
   'CRUD.exportExcel': 'In Excel exportieren',
+  'CRUD.exportExcelTemplate': 'In Excel-Vorlage exportieren',
   'CRUD.fetchFailed': 'Fehler beim Abrufen',
   'CRUD.filter': 'Filtern',
   'CRUD.selected': 'Ausgewählte {{total}} Elemente: ',
@@ -188,6 +189,8 @@ register('de-DE', {
   'loading': 'Wird geladen...',
   'loadingFailed': 'Das Laden ist fehlgeschlagen',
   'LocationPicker.placeholder': 'Wählen Sie einen Ort',
+  'LocationPicker.getLocation':
+    'Klicken Sie hier, um Standortinformationen zu erhalten',
   'Month.placeholder': 'Wählen Sie einen Monat',
   'Nav.sourceError': 'Fehler beim Abrufen des Links',
   'networkError':
@@ -267,6 +270,8 @@ register('de-DE', {
   'Tree.addChild': 'Untergeordnetes Element hinzufügen',
   'Tree.addRoot': 'Stammknoten hinzufügen',
   'Tree.editNode': 'Diesen Knoten bearbeiten',
+  'Tree.invalidArray':
+    'Daten.Optionen, Daten.Elemente oder Daten müssen ein Array sein',
   'Tree.removeNode': 'Diesen Knoten entfernen',
   'Tree.root': 'Stamm',
   'validate.equals': 'Wert muss $1 sein',

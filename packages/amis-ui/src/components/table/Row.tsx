@@ -4,8 +4,9 @@
  */
 
 import React from 'react';
+import {InView} from 'react-intersection-observer';
 
-import {ThemeProps, isObject, autobind} from 'amis-core';
+import {ThemeProps, isObject, autobind, isClickOnInput} from 'amis-core';
 
 import CheckBox from '../Checkbox';
 import {Icon} from '../icons';
@@ -41,6 +42,7 @@ export interface Props extends ThemeProps {
   onMouseEnter: Function;
   onMouseLeave: Function;
   onClick: Function;
+  onDoubleClick: Function;
   onChange: Function;
   childrenColumnName: string;
   selectable: boolean;
@@ -54,7 +56,7 @@ export interface Props extends ThemeProps {
   [propName: string]: any; // 对应checkbox属性
 }
 
-export default class BodyRow extends React.PureComponent<Props> {
+class BodyRow extends React.PureComponent<Props> {
   domRef: React.RefObject<HTMLTableRowElement> = React.createRef();
   // 表格配置
   tdColumns: Array<TdProps>;
@@ -81,9 +83,26 @@ export default class BodyRow extends React.PureComponent<Props> {
     onMouseLeave && onMouseLeave(event, record, rowIndex);
   }
 
-  onClick(event: React.ChangeEvent<any>, record?: any, rowIndex?: number) {
+  onClick(
+    e: React.MouseEvent<HTMLTableRowElement>,
+    record?: any,
+    rowIndex?: number
+  ) {
+    if (isClickOnInput(e)) {
+      return;
+    }
+
     const {onClick} = this.props;
-    onClick && onClick(event, record, rowIndex);
+    onClick && onClick(e, record, rowIndex);
+  }
+
+  onDoubleClick(
+    event: React.ChangeEvent<any>,
+    record?: any,
+    rowIndex?: number
+  ) {
+    const {onDoubleClick} = this.props;
+    onDoubleClick && onDoubleClick(event, record, rowIndex);
   }
 
   getExpandedIcons() {
@@ -321,6 +340,7 @@ export default class BodyRow extends React.PureComponent<Props> {
         onMouseEnter={e => this.onMouseEnter(e, data, rowIndex)}
         onMouseLeave={e => this.onMouseLeave(e, data, rowIndex)}
         onClick={e => this.onClick(e, data, rowIndex)}
+        onDoubleClick={e => this.onDoubleClick(e, data, rowIndex)}
       >
         {draggable ? (
           <Cell
@@ -356,5 +376,61 @@ export default class BodyRow extends React.PureComponent<Props> {
       </tr>,
       children
     ];
+  }
+}
+
+export interface LazyRowProps extends Props {}
+
+export interface LazyRowState {
+  visible: boolean;
+}
+
+export default class LazyRow extends React.PureComponent<
+  LazyRowProps,
+  LazyRowState
+> {
+  constructor(props: LazyRowProps) {
+    super(props);
+
+    const {lazyRenderAfter, rowIndex} = props;
+
+    this.state = {visible: rowIndex + 1 < lazyRenderAfter};
+  }
+
+  @autobind
+  handleVisibleChange(visible: boolean, entry?: any) {
+    this.setState({
+      visible: visible
+    });
+  }
+
+  render() {
+    const visible = this.state.visible;
+    const {columns, lazyRenderAfter, rowIndex, classnames: cx} = this.props;
+    const {tdColumns} = getBuildColumns(columns);
+
+    return (
+      <InView
+        onChange={this.handleVisibleChange}
+        // 如果是嵌套层 默认从当前层来计算
+        skip={rowIndex + 1 < lazyRenderAfter}
+      >
+        {({ref}) => {
+          return visible ? (
+            <BodyRow {...this.props} />
+          ) : (
+            <tr ref={ref}>
+              {tdColumns.map((column: ColumnProps, index: number) => {
+                return (
+                  <td key={`empty-cell-${index}`}>
+                    <div className={cx('Table-emptyBlock')}>&nbsp;</div>
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        }}
+      </InView>
+    );
   }
 }

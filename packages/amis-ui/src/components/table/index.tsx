@@ -25,6 +25,8 @@ import {
 } from 'amis-core';
 import {resizeSensor} from 'amis-core';
 import {getStyleNumber} from 'amis-core';
+import {filterTree} from 'amis-core';
+
 import Spinner, {SpinnerExtraProps} from '../Spinner';
 import ItemActionsWrapper from './ItemActionsWrapper';
 import Cell from './Cell';
@@ -36,8 +38,9 @@ import {
   checkChildrenRow,
   getDataChildrenKeys,
   getBuildColumns,
-  getSelectedRows,
-  levelsSplit
+  getRowsByKeys,
+  levelsSplit,
+  getSortData
 } from './util';
 
 export interface ColumnProps {
@@ -48,7 +51,7 @@ export interface ColumnProps {
   render?: Function;
   fixed?: boolean | string;
   width?: number | string;
-  sorter?: (a: any, b: any) => number | boolean; // 设置为true时，执行onSort，否则执行前端排序
+  sorter?: ((a: any, b: any, order: string) => number) | boolean; // 设置为true时，执行onSort，否则执行前端排序
   sortOrder?: string; // 升序asc、降序desc
   filters?: Array<any>; // 筛选数据源，配置了数据源才展示
   filterMode?: string; // menu/tree 默认menu 先只支持menu
@@ -110,12 +113,15 @@ export interface SummaryProps {
   colSpan: number; // 手动控制列合并 先不支持列合并
   fixed: string | boolean; // 手动设置左固定还是右固定
   render: Function | React.ReactNode;
+  /** 单元格样式，会应用于组件外层的td */
+  cellClassName?: string;
 }
 
 export interface OnRowProps {
   onRowMouseEnter?: Function;
   onRowMouseLeave?: Function;
   onRowClick?: Function;
+  onRowDbClick?: Function;
 }
 
 export interface SortProps {
@@ -169,6 +175,7 @@ export interface TableProps extends ThemeProps, LocaleProps, SpinnerExtraProps {
    * 表格自动计算高度
    */
   autoFillHeight?: boolean | AutoFillHeightObject;
+  lazyRenderAfter?: boolean;
 }
 
 export interface ScrollProps {
@@ -178,7 +185,6 @@ export interface ScrollProps {
 
 export interface TableState {
   selectedRowKeys: Array<string | number>;
-  dataSource: Array<any>;
   expandedRowKeys: Array<string | number>;
   colWidths: {
     [name: string]: {
@@ -217,7 +223,6 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       selectedRowKeys: props.rowSelection
         ? props.rowSelection.selectedRowKeys.map(key => key) || []
         : [],
-      dataSource: props.dataSource || [], // 为了支持前端搜索
       expandedRowKeys: [
         ...(props.expandable ? props.expandable.expandedRowKeys || [] : []),
         ...(props.expandable
@@ -317,17 +322,9 @@ export class Table extends React.PureComponent<TableProps, TableState> {
   }
 
   componentDidUpdate(prevProps: TableProps, prevState: TableState) {
-    if (!isEqual(prevProps.dataSource, this.props.dataSource)) {
-      this.setState({
-        dataSource: [...this.props.dataSource]
-      });
-    }
-
     if (
       prevProps.autoFillHeight !== this.props.autoFillHeight ||
-      ((!isEqual(prevState.dataSource, this.state.dataSource) ||
-        prevProps.loading !== this.props.loading) &&
-        this.props.autoFillHeight)
+      (prevProps.loading !== this.props.loading && this.props.autoFillHeight)
     ) {
       this.updateAutoFillHeight();
     }
@@ -337,8 +334,8 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       const rowSelectionKeyField = this.getRowSelectionKeyField();
       const childrenColumnName = this.getChildrenColumnName();
       // 更新保存的已选择行数据
-      const selectedResult = getSelectedRows(
-        this.state.dataSource,
+      const selectedResult = getRowsByKeys(
+        this.props.dataSource,
         this.state.selectedRowKeys,
         rowSelectionKeyField,
         childrenColumnName
@@ -383,19 +380,19 @@ export class Table extends React.PureComponent<TableProps, TableState> {
     // 展开行变化时触发
     if (!isEqual(prevState.expandedRowKeys, this.state.expandedRowKeys)) {
       if (this.props.expandable) {
+        const childrenColumnName = this.getChildrenColumnName();
+        const expandableKeyField = this.getExpandableKeyField();
         const {onExpandedRowsChange} = this.props.expandable;
-        const expandedRows: Array<any> = [];
-        this.state.dataSource.forEach(item => {
-          if (
-            find(
-              this.state.expandedRowKeys,
-              key => key == item[this.getExpandableKeyField()]
-            )
-          ) {
-            expandedRows.push(item);
-          }
-        });
-        onExpandedRowsChange && onExpandedRowsChange(expandedRows);
+
+        const expandedResult = getRowsByKeys(
+          this.props.dataSource,
+          this.state.selectedRowKeys,
+          expandableKeyField,
+          childrenColumnName
+        );
+
+        onExpandedRowsChange &&
+          onExpandedRowsChange(expandedResult.selectedRows);
       }
     }
 
@@ -691,11 +688,11 @@ export class Table extends React.PureComponent<TableProps, TableState> {
     const rowSelectionKeyField = this.getRowSelectionKeyField();
     const dataList =
       rowSelection && rowSelection.getCheckboxProps
-        ? this.state.dataSource.filter((data, index) => {
+        ? filterTree(dataSource, (data: any, index: number, level: number) => {
             const props = rowSelection.getCheckboxProps(data, index);
             return !props.disabled;
           })
-        : this.state.dataSource;
+        : dataSource;
 
     return (
       <Head
@@ -726,22 +723,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
             sort: payload
           });
 
-          if (onSort) {
-            onSort(payload);
-          } else {
-            if (typeof column.sorter === 'function') {
-              if (payload.orderBy) {
-                const sortList = [...this.state.dataSource];
-                this.setState({
-                  dataSource: sortList.sort(
-                    column.sorter as (a: any, b: any) => number
-                  )
-                });
-              } else {
-                this.setState({dataSource: [...dataSource]});
-              }
-            }
-          }
+          onSort && onSort(payload);
         }}
         onSelectAll={async (
           value: boolean,
@@ -797,6 +779,22 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       );
 
       this.selectedSingleRow(!isSelected, record);
+    }
+  }
+
+  @autobind
+  async onRowDbClick(
+    event: React.ChangeEvent<any>,
+    record?: any,
+    rowIndex?: number
+  ) {
+    const {onRow} = this.props;
+
+    if (onRow && onRow.onRowDbClick) {
+      const prevented = await onRow.onRowDbClick(event, record, rowIndex);
+      if (prevented === false) {
+        return;
+      }
     }
   }
 
@@ -937,7 +935,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
   }
 
   async selectedSingleRow(value: boolean, data: any) {
-    const {onSelect} = this.props;
+    const {onSelect, dataSource} = this.props;
 
     const selectedRowKeys = this.getSelectedRowKeys(value, data);
 
@@ -945,8 +943,8 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       const rowSelectionKeyField = this.getRowSelectionKeyField();
       const childrenColumnName = this.getChildrenColumnName();
 
-      const selectedResult = getSelectedRows(
-        this.state.dataSource,
+      const selectedResult = getRowsByKeys(
+        dataSource,
         selectedRowKeys,
         rowSelectionKeyField,
         childrenColumnName
@@ -995,6 +993,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
       rowClassName,
       keyField,
       columns,
+      lazyRenderAfter,
       classPrefix,
       classnames: cx
     } = this.props;
@@ -1064,9 +1063,11 @@ export class Table extends React.PureComponent<TableProps, TableState> {
         onMouseEnter={this.onRowMouseEnter}
         onMouseLeave={this.onRowMouseLeave}
         onClick={this.onRowClick}
+        onDoubleClick={this.onRowDbClick}
         onChange={this.onRowChange}
         childrenColumnName={this.getChildrenColumnName()}
         keyField={keyField}
+        lazyRenderAfter={lazyRenderAfter}
         classnames={cx}
         classPrefix={classPrefix}
         {...checkboxProps}
@@ -1098,6 +1099,14 @@ export class Table extends React.PureComponent<TableProps, TableState> {
     const tdColumns = this.tdColumns;
     const hasScrollY = scroll && scroll.y;
     const colCount = this.getExtraColumnCount();
+
+    const childrenColumnName = this.getChildrenColumnName();
+    const dataSource = getSortData(
+      this.props.dataSource,
+      tdColumns,
+      childrenColumnName,
+      this.state.sort
+    );
     return (
       <tbody ref={this.tbodyDom} className={cx('Table-tbody')}>
         {!hasScrollY && !sticky && headSummary
@@ -1123,7 +1132,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
               </div>
             </Cell>
           </tr>
-        ) : !this.state.dataSource.length ? (
+        ) : !dataSource.length ? (
           <tr className={cx('Table-row', 'Table-empty-row')}>
             <Cell
               classnames={cx}
@@ -1138,9 +1147,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
             </Cell>
           </tr>
         ) : (
-          this.state.dataSource.map((data, index) =>
-            this.renderRow(data, index, [])
-          )
+          dataSource.map((data, index) => this.renderRow(data, index, []))
         )}
       </tbody>
     );
@@ -1189,9 +1196,9 @@ export class Table extends React.PureComponent<TableProps, TableState> {
   }
 
   renderSummaryRow(summary: any) {
-    const {classnames: cx, classPrefix} = this.props;
+    const {classnames: cx, classPrefix, dataSource} = this.props;
     if (typeof summary === 'function') {
-      return summary(this.state.dataSource);
+      return summary(dataSource);
     }
     if (React.isValidElement(summary)) {
       return summary;
@@ -1204,7 +1211,7 @@ export class Table extends React.PureComponent<TableProps, TableState> {
         isRightExpandable={this.isRightExpandable()}
         classnames={cx}
         classPrefix={classPrefix}
-        dataSource={this.state.dataSource}
+        dataSource={dataSource}
         onMouseEnter={this.onRowMouseEnter}
         onMouseLeave={this.onRowMouseLeave}
       />

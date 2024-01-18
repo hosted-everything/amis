@@ -17,6 +17,10 @@ import {resolveVariableAndFilter} from '../utils/tpl-builtin';
 import {normalizeApiResponseData} from '../utils/api';
 import {matchSorter} from 'match-sorter';
 import {filter} from '../utils/tpl';
+import {TableStore} from './table';
+
+import type {ITableStore} from './table';
+import type {MatchSorterOptions} from 'match-sorter';
 
 interface MatchFunc {
   (
@@ -30,6 +34,15 @@ interface MatchFunc {
       query: Record<string, any>;
       /* 列配置 */
       columns: any;
+      /**
+       * match-sorter 匹配函数
+       * @doc https://github.com/kentcdodds/match-sorter
+       */
+      matchSorter: (
+        items: any[],
+        value: string,
+        options?: MatchSorterOptions<any>
+      ) => any[];
     }
   ): any;
 }
@@ -223,7 +236,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
           if (matchFunc && typeof matchFunc === 'function') {
             items = matchFunc(items, self.data.itemsRaw, {
               query: self.query,
-              columns: options.columns
+              columns: options.columns,
+              matchSorter: matchSorter
             });
           } else {
             if (Array.isArray(options.columns)) {
@@ -395,8 +409,11 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
           };
 
           if (options.loadDataOnce) {
-            // 记录原始集合，后续可能基于原始数据做排序查找。
-            data.itemsRaw = oItems || oRows;
+            /**
+             * 1. 记录原始集合，后续可能基于原始数据做排序查找。
+             * 2. 接口返回中没有 items 和 rows 字段，则直接用查到的数据。
+             */
+            data.itemsRaw = oItems || oRows || rowsData.concat();
             let filteredItems = rowsData.concat();
 
             if (Array.isArray(options.columns)) {
@@ -453,7 +470,11 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
           }
 
           self.items.replace(rowsData);
-          self.reInitData(data, !!(api as ApiObject).replaceData);
+          self.reInitData(
+            data,
+            !!(api as ApiObject).replaceData,
+            (api as ApiObject).concatDataFields
+          );
           options.syncResponse2Query !== false &&
             updateQuery(
               pick(rest, Object.keys(self.query)),
@@ -506,13 +527,18 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
       }
     });
 
-    function changePage(page: number, perPage?: number | string) {
-      self.page = page;
+    function changePage(page: number | string, perPage?: number | string) {
+      const pageNum = typeof page !== 'number' ? parseInt(page, 10) : page;
+
+      self.page = isNaN(pageNum) ? 1 : pageNum;
       perPage && changePerPage(perPage);
     }
 
     function changePerPage(perPage: number | string) {
-      self.perPage = parseInt(perPage as string, 10);
+      const perPageNum =
+        typeof perPage !== 'number' ? parseInt(perPage, 10) : perPage;
+
+      self.perPage = isNaN(perPageNum) ? 10 : perPageNum;
     }
 
     function selectAction(action: ActionObject) {
@@ -544,7 +570,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
             {
               __saved: Date.now()
             },
-            !!api && (api as ApiObject).replaceData
+            !!api && (api as ApiObject).replaceData,
+            (api as ApiObject)?.concatDataFields
           );
           self.updatedAt = Date.now();
         }
@@ -656,7 +683,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
       if (matchFunc && typeof matchFunc === 'function') {
         items = matchFunc(items, items.concat(), {
           query: self.query,
-          columns: options.columns
+          columns: options.columns,
+          matchSorter: matchSorter
         });
       } else {
         if (Array.isArray(options.columns)) {
@@ -673,6 +701,7 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
                 if (value.length > 0) {
                   const arr = [...items];
                   let arrItems: Array<any> = [];
+                  /** 搜索 query 值为数组的情况 */
                   value.forEach(item => {
                     arrItems = [
                       ...arrItems,
@@ -704,10 +733,13 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
 
       const data = {
         ...self.pristine,
-        items: items.slice(
-          (self.page - 1) * self.perPage,
-          self.page * self.perPage
-        ),
+        items:
+          items.length > self.perPage
+            ? items.slice(
+                (self.page - 1) * self.perPage,
+                self.page * self.perPage
+              )
+            : items,
         count: items.length,
         total: items.length
       };
@@ -723,6 +755,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
         api?: Api;
         data?: any;
         filename?: string;
+        pageField?: string;
+        perPageField?: string;
       } = {}
     ) => {
       let items = options.loadDataOnce ? self.data.itemsRaw : self.data.items;
@@ -731,8 +765,20 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
         : 'data';
 
       if (options.api) {
+        const pageField = options.pageField || 'page';
+        const perPageField = options.perPageField || 'perPage';
         const env = getEnv(self);
-        const res = await env.fetcher(options.api, options.data);
+        const ctx: any = createObject(self.data, {
+          ...self.query,
+          ...options.data,
+          [pageField]: self.page || 1,
+          [perPageField]: self.perPage || 10
+        });
+        const res = await env.fetcher(options.api, ctx, {
+          autoAppend: true,
+          pageField,
+          perPageField
+        });
         if (!res.data) {
           return;
         }
@@ -791,6 +837,22 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
       self.total = total || 0;
     };
 
+    /** 非Picker模式下，重置当前CRUD的所有的已选择项目 */
+    const resetSelection = (): void => {
+      // 初始化CRUD记录的已选择项目和未选择项目
+      setSelectedItems([]);
+      setUnSelectedItems([]);
+
+      const tableStore = self?.children?.find?.(
+        (s: any) => s.storeType === TableStore.name
+      );
+
+      if (tableStore) {
+        // 清空Table记录的已选择项目
+        (tableStore as ITableStore).clear?.();
+      }
+    };
+
     return {
       getData,
       updateSelectData,
@@ -809,7 +871,8 @@ export const CRUDStore = ServiceStore.named('CRUDStore')
       initFromScope,
       exportAsCSV,
       updateColumns,
-      updateTotal
+      updateTotal,
+      resetSelection
     };
   });
 

@@ -10,6 +10,8 @@ import {
   getSchemaTpl,
   JsonGenerateID,
   JSONGetById,
+  persistGet,
+  persistSet,
   PluginActions,
   RendererPluginAction,
   RendererPluginEvent,
@@ -24,7 +26,8 @@ import {
   mapTree,
   normalizeApi,
   PlainObject,
-  Schema
+  Schema,
+  Option
 } from 'amis-core';
 import {Button} from 'amis';
 import {i18n as _i18n} from 'i18n-runtime';
@@ -1290,7 +1293,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                   mode: 'horizontal',
                   options: [
                     {label: '组件变量', value: 'cmpt'},
-                    {label: '页面变量', value: 'page'},
+                    {label: '页面参数', value: 'page'},
                     {label: '内存变量', value: 'app'}
                   ],
                   value: /^appVariables/.test(path) // 只需要初始化时更新value
@@ -1318,8 +1321,8 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
               body: [
                 {
                   type: 'wrapper',
-                  size: 'sm',
                   visibleOn: 'data.componentId === "customCmptId"',
+                  className: 'p-none mb-6',
                   body: [
                     ...renderCmptActionSelect(
                       '目标组件',
@@ -1335,7 +1338,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 {
                   type: 'wrapper',
                   visibleOn: 'data.componentId !== "customCmptId"',
-                  size: 'sm',
+                  className: 'p-none mb-6',
                   body: [
                     ...renderCmptActionSelect(
                       '目标组件',
@@ -1538,7 +1541,7 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 })
               ]
             },
-            // 页面变量
+            // 页面参数
             {
               type: 'container',
               visibleOn: '__actionSubType === "page"',
@@ -1549,9 +1552,12 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                     className: 'p-none',
                     body: [
                       getCustomNodeTreeSelectSchema({
-                        label: '页面变量',
-                        rootLabel: '页面变量',
-                        options: pageVariableOptions
+                        label: '页面参数',
+                        rootLabel: '页面参数',
+                        options: pageVariableOptions,
+                        horizontal: {
+                          leftFixed: true
+                        }
                       }),
                       getSchemaTpl('formulaControl', {
                         name: 'value',
@@ -1560,7 +1566,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                         size: 'lg',
                         mode: 'horizontal',
                         required: true,
-                        placeholder: '请输入变量值'
+                        placeholder: '请输入变量值',
+                        horizontal: {
+                          leftFixed: true
+                        }
                       })
                     ]
                   }
@@ -1578,7 +1587,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                     className: 'p-none',
                     body: [
                       getCustomNodeTreeSelectSchema({
-                        options: variableOptions
+                        options: variableOptions,
+                        horizontal: {
+                          leftFixed: true
+                        }
                       }),
                       getSchemaTpl('formulaControl', {
                         name: 'value',
@@ -1587,7 +1599,10 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                         size: 'lg',
                         mode: 'horizontal',
                         required: true,
-                        placeholder: '请输入变量值'
+                        placeholder: '请输入变量值',
+                        horizontal: {
+                          leftFixed: true
+                        }
                       })
                     ]
                   }
@@ -1737,6 +1752,55 @@ export const ACTION_TYPE_TREE = (manager: any): RendererPluginAction[] => {
                 payload: {
                   type: 'object',
                   title: '提交的表单数据'
+                }
+              }
+            }
+          ]
+        },
+        {
+          actionLabel: '校验表单项',
+          actionType: 'validateFormItem',
+          description: '校验单个表单项数据',
+          descDetail: (info: any) => {
+            return (
+              <div>
+                校验
+                <span className="variable-left variable-right">
+                  {info?.rendererLabel || info.componentId || '-'}
+                </span>
+                的数据
+              </div>
+            );
+          },
+          supportComponents: [...FORMITEM_CMPTS],
+          schema: [
+            ...renderCmptSelect('目标组件', true),
+            renderCmptIdInput(),
+            {
+              name: 'outputVar',
+              type: 'input-text',
+              label: '校验结果',
+              placeholder: '请输入存储校验结果的变量名称',
+              description:
+                '如需执行多次表单校验，可以修改此变量名用于区分不同的校验结果',
+              mode: 'horizontal',
+              size: 'lg',
+              value: 'validateFormItemResult',
+              required: true
+            }
+          ],
+          outputVarDataSchema: [
+            {
+              type: 'object',
+              title: 'validateFormItemResult',
+              properties: {
+                error: {
+                  type: 'string',
+                  title: '错误信息'
+                },
+                value: {
+                  type: 'object',
+                  title: '校验的表单项的值'
                 }
               }
             }
@@ -2212,7 +2276,10 @@ export const COMMON_ACTION_SCHEMA_MAP: {
           size: 'lg',
           mode: 'horizontal',
           visibleOn: `data.__rendererName && !data.__isScopeContainer && data.__rendererName !== 'combo' && data.__rendererName !== 'input-table'`,
-          required: true
+          required: true,
+          horizontal: {
+            leftFixed: true
+          }
         })
       ]
     })
@@ -3049,12 +3116,12 @@ export const getEventControlConfig = (
         if (
           (config.data && typeof config.data === 'object') ||
           (config.args &&
-            !Object.keys(config.args).length &&
+            Object.keys(config.args).length &&
             config.data === undefined)
         ) {
           config.__addParam = true;
           config.__containerType = 'appoint';
-          config.dataMergeMode = 'override';
+          config.dataMergeMode = config.dataMergeMode || 'merge';
         }
 
         if (config.__addParam && config.data) {
@@ -3067,7 +3134,7 @@ export const getEventControlConfig = (
           }
         } else if (
           config.args &&
-          !Object.keys(config.args).length &&
+          Object.keys(config.args).length &&
           config.data === undefined
         ) {
           config.__reloadParams = objectToComboArray(config.args);
@@ -3496,4 +3563,23 @@ export const getEventControlConfig = (
       return action;
     }
   };
+};
+
+/**
+ * 更新localStorage存储的常用动作
+ */
+export const updateCommonUseActions = (action: Option) => {
+  const commonUseActions = persistGet('common-use-actions', []);
+  const index = commonUseActions.findIndex(
+    (item: Option) => item.value === action.value
+  );
+  if (index >= 0) {
+    commonUseActions[index].use += 1;
+  } else {
+    commonUseActions.unshift(action);
+  }
+  commonUseActions.sort(
+    (before: Option, next: Option) => next.use - before.use
+  );
+  persistSet('common-use-actions', commonUseActions);
 };

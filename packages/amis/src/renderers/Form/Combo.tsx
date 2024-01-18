@@ -55,6 +55,7 @@ import {
 import {ListenerAction} from 'amis-core';
 import type {SchemaTokenizeableString} from '../../Schema';
 import isPlainObject from 'lodash/isPlainObject';
+import isEqual from 'lodash/isEqual';
 
 export type ComboCondition = {
   test: string;
@@ -541,8 +542,11 @@ export default class ComboControl extends React.Component<ComboProps> {
   }
 
   getValueAsArray(props = this.props) {
-    const {flat, joinValues, delimiter, type} = props;
-    let value = props.value;
+    const {flat, joinValues, delimiter, type, formItem} = props;
+    // 因为 combo 多个子表单可能同时发生变化。
+    // onChagne 触发多次，上次变更还没应用到 props.value 上来，这次触发变更就会包含历史数据，把上次触发的数据给重置成旧的了。
+    // 通过 props.getValue() 拿到的是最新的
+    let value = props.getValue();
 
     if (joinValues && flat && typeof value === 'string') {
       value = value.split(delimiter || ',');
@@ -795,6 +799,11 @@ export default class ComboControl extends React.Component<ComboProps> {
   }
 
   handleSingleFormChange(values: object) {
+    if (this.props.value === null && isEqual(this.defaultValue, values)) {
+      // 由清空触发，忽略
+      return;
+    }
+
     this.props.onChange(
       {
         ...values
@@ -904,7 +913,8 @@ export default class ComboControl extends React.Component<ComboProps> {
       nullable,
       value: rawValue,
       translate: __,
-      store
+      store,
+      flat
     } = this.props;
     const value = this.getValueAsArray();
     const minLength = this.resolveVariableProps(this.props, 'minLength');
@@ -937,16 +947,19 @@ export default class ComboControl extends React.Component<ComboProps> {
               let valid = false;
               for (let formitem of form.items) {
                 const cloned: IFormItemStore = cloneModel(formitem);
-                let value: any = getVariable(values, formitem.name, false);
+                /** 开启flat后subForm的值会挂在字段"flat"下，所以不需要基于 name 取值 */
+                let derivedValue: any = flat
+                  ? values
+                  : getVariable(values, formitem.name, false);
 
-                if (formitem.extraName) {
-                  value = [
+                if (formitem.extraName && !flat) {
+                  derivedValue = [
                     getVariable(values, formitem.name, false),
                     getVariable(values, formitem.extraName, false)
                   ];
                 }
 
-                cloned.changeTmpValue(value, 'dataChanged');
+                cloned.changeTmpValue(derivedValue, 'dataChanged');
                 valid = await cloned.validate(values);
                 destroyModel(cloned);
                 if (valid === false) {
@@ -1706,7 +1719,9 @@ export default class ComboControl extends React.Component<ComboProps> {
     } = this.props;
 
     let items = this.props.items;
-    const data = isObject(value) ? this.formatValue(value) : this.defaultValue;
+    const data = isObject(value)
+      ? this.formatValue(value)
+      : this.formatValue(this.defaultValue);
     let condition: ComboCondition | null = null;
 
     if (Array.isArray(conditions) && conditions.length) {

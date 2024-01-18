@@ -34,6 +34,7 @@ import {
 import {CardProps, CardSchema} from './Card';
 import {Card2Props, Card2Schema} from './Card2';
 import type {IItem} from 'amis-core';
+import find from 'lodash/find';
 
 /**
  * Cards 卡片集合渲染器。
@@ -102,6 +103,11 @@ export interface CardsSchema extends BaseSchema, SpinnerExtraProps {
    * 是否固顶
    */
   affixHeader?: boolean;
+
+  /**
+   * 是否固底
+   */
+  affixFooter?: boolean;
 
   /**
    * 顶部区域
@@ -496,11 +502,25 @@ export default class Cards extends React.Component<GridProps, object> {
     store.reset();
   }
 
-  bulkUpdate(value: object, items: Array<object>) {
-    const {store} = this.props;
+  bulkUpdate(value: any, items: Array<object>) {
+    // const {store} = this.props;
 
-    const items2 = store.items.filter(item => ~items.indexOf(item.pristine));
-    items2.forEach(item => item.change(value));
+    // const items2 = store.items.filter(item => ~items.indexOf(item.pristine));
+    // items2.forEach(item => item.change(value));
+
+    const {store, primaryField} = this.props;
+
+    if (primaryField && value.ids) {
+      const ids = value.ids.split(',');
+      const rows = store.items.filter(item =>
+        find(ids, (id: any) => id && id == item.data[primaryField])
+      );
+      const newValue = {...value, ids: undefined};
+      rows.forEach(item => item.change(newValue));
+    } else if (Array.isArray(items)) {
+      const rows = store.items.filter(item => ~items.indexOf(item.pristine));
+      rows.forEach(item => item.change(value));
+    }
   }
 
   getSelected() {
@@ -720,7 +740,8 @@ export default class Cards extends React.Component<GridProps, object> {
       render,
       showFooter,
       store,
-      classnames: cx
+      classnames: cx,
+      affixFooter
     } = this.props;
 
     if (showFooter === false) {
@@ -740,18 +761,33 @@ export default class Cards extends React.Component<GridProps, object> {
       : null;
     const actions = this.renderActions('footer');
 
+    const footerNode = footer ? (
+      <div
+        className={cx(
+          'Cards-footer',
+          footerClassName,
+          affixFooter ? 'Cards-footer--affix' : ''
+        )}
+        key="footer"
+      >
+        {render('footer', footer)}
+      </div>
+    ) : null;
+
     const toolbarNode =
       actions || child ? (
-        <div className={cx('Cards-toolbar')} key="footer-toolbar">
+        <div
+          className={cx(
+            'Cards-toolbar',
+            !footerNode && affixFooter ? 'Cards-footToolbar--affix' : ''
+          )}
+          key="footer-toolbar"
+        >
           {actions}
           {child}
         </div>
       ) : null;
-    const footerNode = footer ? (
-      <div className={cx('Cards-footer', footerClassName)} key="footer">
-        {render('footer', footer)}
-      </div>
-    ) : null;
+
     return footerNode && toolbarNode
       ? [toolbarNode, footerNode]
       : footerNode || toolbarNode || null;

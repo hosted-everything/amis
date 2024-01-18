@@ -14,7 +14,7 @@ import {compile} from 'path-to-regexp';
 
 import type {Schema, PlainObject, FunctionPropertyNames} from '../types';
 
-import {evalExpression} from './tpl';
+import {evalExpression, filter} from './tpl';
 import {IIRendererStore} from '../store';
 import {IFormStore} from '../store/form';
 import {autobindMethod} from './autobind';
@@ -253,7 +253,8 @@ export function isObjectShallowModified(
   next: any,
   strictModeOrFunc: boolean | ((lhs: any, rhs: any) => boolean) = true,
   ignoreUndefined: boolean = false,
-  stack: Array<any> = []
+  stack: Array<any> = [],
+  maxDepth: number = -1
 ): boolean {
   if (Array.isArray(prev) && Array.isArray(next)) {
     return prev.length !== next.length
@@ -310,6 +311,9 @@ export function isObjectShallowModified(
   }
 
   stack.push(prev);
+  if (maxDepth > 0 && stack.length > maxDepth) {
+    return true;
+  }
 
   for (let i: number = keys.length - 1; i >= 0; i--) {
     const key = keys[i];
@@ -1901,7 +1905,7 @@ export function isClickOnInput(e: React.MouseEvent<HTMLElement>) {
     !e.currentTarget.contains(target) ||
     ~['INPUT', 'TEXTAREA'].indexOf(target.tagName) ||
     ((formItem = target.closest(
-      `button, a, [data-role="form-item"], label[data-role="checkbox"]`
+      `button, a, [data-role="form-item"], label[data-role="checkbox"], label[data-role="switch"]`
     )) &&
       e.currentTarget.contains(formItem))
   );
@@ -2050,21 +2054,52 @@ export function isNumeric(value: any): boolean {
   return /^[-+]?(?:\d*[.])?\d+$/.test(value);
 }
 
+export type PrimitiveTypes = 'boolean' | 'number';
+
 /**
  * 解析Query字符串中的原始类型，目前仅支持转化布尔类型
  *
  * @param query 查询字符串
+ * @param options 配置参数
  * @returns 解析后的查询字符串
  */
-export function parsePrimitiveQueryString(rawQuery: Record<string, any>) {
+export function parsePrimitiveQueryString(
+  rawQuery: Record<string, any>,
+  options?: {
+    primitiveTypes: PrimitiveTypes[];
+  }
+) {
   if (!isPlainObject(rawQuery)) {
     return rawQuery;
   }
 
+  options = options || {primitiveTypes: ['boolean']};
+
+  if (
+    !Array.isArray(options.primitiveTypes) ||
+    options.primitiveTypes.length === 0
+  ) {
+    options.primitiveTypes = ['boolean'];
+  }
+
   const query = JSONValueMap(rawQuery, value => {
-    /** 解析布尔类型，后续有需要在这里扩充 */
-    if (value === 'true' || value === 'false') {
+    if (
+      (options?.primitiveTypes?.includes('boolean') && value === 'true') ||
+      value === 'false'
+    ) {
+      /** 解析布尔类型 */
       return value === 'true';
+    } else if (
+      options?.primitiveTypes?.includes('number') &&
+      isNumeric(value) &&
+      isFinite(value) &&
+      value >= -Number.MAX_SAFE_INTEGER &&
+      value <= Number.MAX_SAFE_INTEGER
+    ) {
+      /** 解析数字类型 */
+      const result = Number(value);
+
+      return !isNaN(result) ? result : value;
     }
 
     return value;
@@ -2082,16 +2117,19 @@ export function parsePrimitiveQueryString(rawQuery: Record<string, any>) {
  */
 export function parseQuery(
   location?: Location | {query?: any; search?: any; [propName: string]: any},
-  options?: {parsePrimitive?: boolean}
+  options?: {
+    parsePrimitive?: boolean;
+    primitiveTypes?: PrimitiveTypes[];
+  }
 ): Record<string, any> {
-  const {parsePrimitive = false} = options || {};
+  const {parsePrimitive = false, primitiveTypes = ['boolean']} = options || {};
   const query =
     (location && !(location instanceof Location) && location?.query) ||
     (location && location?.search && qsparse(location.search.substring(1))) ||
     (window.location.search && qsparse(window.location.search.substring(1)));
   const normalizedQuery = isPlainObject(query)
     ? parsePrimitive
-      ? parsePrimitiveQueryString(query)
+      ? parsePrimitiveQueryString(query, {primitiveTypes})
       : query
     : {};
   /* 处理hash中的query */
@@ -2246,4 +2284,22 @@ export function replaceUrlParams(path: string, params: Record<string, any>) {
   }
 
   return path;
+}
+
+const TEST_ID_KEY: 'data-testid' = 'data-testid';
+
+export function buildTestId(testid?: string, data?: PlainObject) {
+  if (!testid) {
+    return {};
+  }
+  return {
+    [TEST_ID_KEY]: filter(testid, data)
+  };
+}
+
+export function getTestId(testid?: string, data?: PlainObject) {
+  if (!testid) {
+    return undefined;
+  }
+  return buildTestId(testid, data)[TEST_ID_KEY];
 }

@@ -1,6 +1,6 @@
 {
   "name": "amis-editor",
-  "version": "5.6.1",
+  "version": "6.0.0",
   "description": "amis 可视化编辑器",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -41,15 +41,15 @@
   ],
   "dependencies": {
     "@webcomponents/webcomponentsjs": "^2.6.0",
-    "amis-editor-core": "*",
+    "amis-editor-core": "^6.0.0",
     "amis-postcss": "1.0.0",
-    "amis-theme-editor": "*",
+    "amis-theme-editor-helper": "*",
     "i18n-runtime": "*",
     "lodash": "^4.17.15",
     "mobx-state-tree": "^3.17.3"
   },
   "devDependencies": {
-    "@fortawesome/fontawesome-free": "^5.15.3",
+    "@fortawesome/fontawesome-free": "^6.1.1",
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
@@ -102,7 +102,7 @@
     "amis": "*",
     "amis-core": "*",
     "amis-formula": "*",
-    "amis-theme-editor": "*",
+    "amis-theme-editor-helper": "*",
     "amis-ui": "*",
     "i18n-runtime": "*",
     "react": ">=16.8.6",

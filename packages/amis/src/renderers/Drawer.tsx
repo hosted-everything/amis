@@ -5,7 +5,9 @@ import {
   filterTarget,
   isPureVariable,
   resolveVariableAndFilter,
-  setThemeClassName
+  setThemeClassName,
+  ValidateError,
+  getTestId
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -141,6 +143,8 @@ export interface DrawerSchema extends BaseSchema {
    * 是否显示错误信息
    */
   showErrorMsg?: boolean;
+
+  testid?: string;
 }
 
 export type DrawerSchemaBase = Omit<DrawerSchema, 'type'>;
@@ -214,6 +218,7 @@ export default class Drawer extends React.Component<DrawerProps> {
   reaction: any;
   $$id: string = guid();
   drawer: any;
+  clearErrorTimer: ReturnType<typeof setTimeout> | undefined;
   constructor(props: DrawerProps) {
     super(props);
 
@@ -251,10 +256,11 @@ export default class Drawer extends React.Component<DrawerProps> {
 
   componentWillUnmount() {
     this.reaction && this.reaction();
+    clearTimeout(this.clearErrorTimer);
   }
 
   buildActions(): Array<ActionSchema> {
-    const {actions, confirm, translate: __} = this.props;
+    const {actions, confirm, testid, translate: __} = this.props;
 
     if (typeof actions !== 'undefined') {
       return actions;
@@ -263,6 +269,7 @@ export default class Drawer extends React.Component<DrawerProps> {
     let ret: Array<ActionSchema> = [];
     ret.push({
       type: 'button',
+      testid: getTestId(testid && `${testid}-cancel`),
       actionType: 'close',
       label: __('cancel')
     });
@@ -271,6 +278,7 @@ export default class Drawer extends React.Component<DrawerProps> {
       ret.push({
         type: 'button',
         actionType: 'confirm',
+        testid: getTestId(testid && `${testid}-confirm`),
         label: __('confirm'),
         primary: true
       });
@@ -850,6 +858,13 @@ export class DrawerRenderer extends Drawer {
         .catch(reason => {
           store.updateMessage(reason.message, true);
           store.markBusying(false);
+
+          if (reason.constructor?.name === ValidateError.name) {
+            clearTimeout(this.clearErrorTimer);
+            this.clearErrorTimer = setTimeout(() => {
+              store.updateMessage('');
+            }, 3000);
+          }
         });
 
       return true;
@@ -872,8 +887,10 @@ export class DrawerRenderer extends Drawer {
     const {onClose, onAction, store, env, dispatchEvent} = this.props;
 
     if (action.from === this.$$id) {
-      // 可能是孩子又派送回来到自己了，这时候就不要处理了。
-      return;
+      // 如果是从 children 里面委托过来的，那就直接向上冒泡。
+      return onAction
+        ? onAction(e, action, data, throwErrors, delegate || this.context)
+        : false;
     }
 
     const scoped = this.context as IScopedContext;
@@ -923,7 +940,8 @@ export class DrawerRenderer extends Drawer {
           ? this.handleSelfClose()
           : this.closeTarget(action.close);
       }
-    } else if (this.tryChildrenToHandle(action, data)) {
+    } else if (!action.from && this.tryChildrenToHandle(action, data)) {
+      // 如果有 from 了，说明是从子节点冒泡上来的，那就不再走让子节点处理的逻辑。
       // do nothing
     } else if (action.actionType === 'ajax') {
       store.setCurrentAction(action);

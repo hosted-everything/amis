@@ -1,23 +1,31 @@
 import React from 'react';
 import {findDOMNode} from 'react-dom';
+import {isAlive} from 'mobx-state-tree';
+import {reaction} from 'mobx';
+import Sortable from 'sortablejs';
 import isEqual from 'lodash/isEqual';
+import find from 'lodash/find';
+import debounce from 'lodash/debounce';
+import intersection from 'lodash/intersection';
+import isPlainObject from 'lodash/isPlainObject';
 import {
+  TableStore,
+  ITableStore,
   ScopedContext,
   IScopedContext,
   SchemaExpression,
   position,
   animation,
   evalExpressionWithConditionBuilder,
-  isEffectiveApi
-} from 'amis-core';
-import {Renderer, RendererProps} from 'amis-core';
-import {SchemaNode, ActionObject, Schema} from 'amis-core';
-import forEach from 'lodash/forEach';
-import {evalExpression, filter} from 'amis-core';
-import {BadgeObject, Checkbox, Spinner, SpinnerExtraProps} from 'amis-ui';
-import {Button} from 'amis-ui';
-import {TableStore, ITableStore, padArr} from 'amis-core';
-import {
+  isEffectiveApi,
+  Renderer,
+  RendererProps,
+  SchemaNode,
+  ActionObject,
+  Schema,
+  evalExpression,
+  filter,
+  noop,
   anyChanged,
   changedEffect,
   getScrollParent,
@@ -26,17 +34,22 @@ import {
   isArrayChildrenModified,
   eachTree,
   isObject,
-  createObject
-} from 'amis-core';
-import {
+  createObject,
   isPureVariable,
   resolveVariable,
-  resolveVariableAndFilter
+  resolveVariableAndFilter,
+  resizeSensor,
+  offset,
+  getStyleNumber
 } from 'amis-core';
-import Sortable from 'sortablejs';
-import {resizeSensor} from 'amis-core';
-import find from 'lodash/find';
-import {Icon} from 'amis-ui';
+import {
+  Button,
+  Icon,
+  BadgeObject,
+  Checkbox,
+  Spinner,
+  SpinnerExtraProps
+} from 'amis-ui';
 import {TableCell} from './TableCell';
 import type {AutoGenerateFilterObject} from '../CRUD';
 import {HeadCellFilterDropDown} from './HeadCellFilterDropdown';
@@ -48,31 +61,18 @@ import {
   SchemaClassName,
   SchemaObject,
   SchemaTokenizeableString,
-  SchemaType,
-  SchemaTpl,
-  SchemaIcon
+  SchemaTpl
 } from '../../Schema';
 import {SchemaPopOver} from '../PopOver';
 import {SchemaQuickEdit} from '../QuickEdit';
 import {SchemaCopyable} from '../Copyable';
 import {SchemaRemark} from '../Remark';
-import {TableBody} from './TableBody';
-import {isAlive} from 'mobx-state-tree';
 import ColumnToggler from './ColumnToggler';
-
-import {offset} from 'amis-core';
-import {getStyleNumber} from 'amis-core';
 import {exportExcel} from './exportExcel';
-import type {IColumn, IRow} from 'amis-core';
-import intersection from 'lodash/intersection';
-import {isMobile} from 'amis-core';
-import isPlainObject from 'lodash/isPlainObject';
-import omit from 'lodash/omit';
-import ColGroup from './ColGroup';
-import debounce from 'lodash/debounce';
 import AutoFilterForm from './AutoFilterForm';
 import Cell from './Cell';
-import {reaction} from 'mobx';
+
+import type {IColumn, IRow} from 'amis-core';
 
 /**
  * 表格列，不指定类型时默认为文本类型。
@@ -223,6 +223,11 @@ export interface TableSchema extends BaseSchema {
   affixHeader?: boolean;
 
   /**
+   * 是否固底
+   */
+  affixFooter?: boolean;
+
+  /**
    * 表格的列信息
    */
   columns?: Array<TableColumn>;
@@ -371,6 +376,7 @@ export interface TableProps extends RendererProps, SpinnerExtraProps {
   selectable?: boolean;
   selected?: Array<any>;
   maxKeepItemSelectionLength?: number;
+  maxItemSelectionLength?: number;
   valueField?: string;
   draggable?: boolean;
   columnsTogglable?: boolean | 'auto';
@@ -431,6 +437,8 @@ export type ExportExcelToolbar = SchemaNode & {
   exportColumns?: any[];
   rowSlice?: string;
   filename?: string;
+  pageField?: string;
+  perPageField?: string;
 };
 
 // 如果这里的事件调整，对应CRUD里的事件配置也需要同步修改
@@ -501,6 +509,7 @@ export default class Table extends React.Component<TableProps, object> {
     'onSelect',
     'keepItemSelectionOnPageChange',
     'maxKeepItemSelectionLength',
+    'maxItemSelectionLength',
     'autoGenerateFilter'
   ];
   static defaultProps: Partial<TableProps> = {
@@ -598,6 +607,7 @@ export default class Table extends React.Component<TableProps, object> {
       formItem,
       keepItemSelectionOnPageChange,
       maxKeepItemSelectionLength,
+      maxItemSelectionLength,
       onQuery,
       autoGenerateFilter,
       loading,
@@ -634,6 +644,7 @@ export default class Table extends React.Component<TableProps, object> {
         combineFromIndex,
         keepItemSelectionOnPageChange,
         maxKeepItemSelectionLength,
+        maxItemSelectionLength,
         loading,
         canAccessSuperData,
         lazyRenderAfter,
@@ -698,7 +709,17 @@ export default class Table extends React.Component<TableProps, object> {
       }
     }
 
-    updateRows && store.initRows(rows, props.getEntryId, props.reUseRow);
+    if (updateRows) {
+      store.initRows(rows, props.getEntryId, props.reUseRow);
+    } else if (props.reUseRow === false) {
+      /**
+       * 在reUseRow为false情况下，支持强制刷新表格行状态
+       * 适用的情况：用户每次刷新，调用接口，返回的数据都是一样的，导致updateRows为false，故针对每次返回数据一致的情况，需要强制表格更新
+       */
+      updateRows = true;
+      store.initRows(value, props.getEntryId, props.reUseRow);
+    }
+
     Array.isArray(props.selected) &&
       store.updateSelected(props.selected, props.valueField);
     return updateRows;
@@ -967,54 +988,25 @@ export default class Table extends React.Component<TableProps, object> {
 
     value = value !== undefined ? value : !item.checked;
 
-    let rows = [item];
-    if (shift) {
-      rows = store.getToggleShiftRows(item);
-    }
-
-    const selectedItems = value
-      ? [
-          ...store.selectedRows.map((row: IRow) => row.data),
-          ...rows.map((row: IRow) => row.data)
-        ]
-      : store.selectedRows
-          .filter(
-            (row: IRow) =>
-              rows.findIndex((rowItem: IRow) => rowItem === row) === -1
-          )
-          .map((row: IRow) => row.data);
-    const unSelectedItems = value
-      ? store.unSelectedRows
-          .filter(
-            (row: IRow) =>
-              rows.findIndex((rowItem: IRow) => rowItem === row) === -1
-          )
-          .map((row: IRow) => row.data)
-      : [
-          ...store.unSelectedRows.map((row: IRow) => row.data),
-          ...rows.map((row: IRow) => row.data)
-        ];
-
-    const rendererEvent = await dispatchEvent(
-      'selectedChange',
-      createObject(data, {
-        selectedItems,
-        unSelectedItems
-      })
-    );
-
-    if (rendererEvent?.prevented) {
-      return;
-    }
-
     if (shift) {
       store.toggleShift(item, value);
     } else {
       // 如果picker的value是绑定的上层数量变量
       // 那么用户只能通过事件动作来更新上层变量来实现选中
-      // 但是注册了setValue动作后，会优先通过componentDidUpdate更新了selectedRows
-      // 那么这里直接toggle就判断出错了 需要明确是选中还是取消选中
       item.toggle(value);
+    }
+
+    const rendererEvent = await dispatchEvent(
+      'selectedChange',
+      createObject(data, {
+        selectedItems: store.selectedRows.map(row => row.data),
+        unSelectedItems: store.unSelectedRows.map(row => row.data),
+        item: item.data
+      })
+    );
+
+    if (rendererEvent?.prevented) {
+      return;
     }
 
     this.syncSelected();
@@ -1069,27 +1061,19 @@ export default class Table extends React.Component<TableProps, object> {
     const {store, data, dispatchEvent} = this.props;
     const items = store.rows.map((row: any) => row.data);
 
-    const allChecked = store.allChecked;
-    const selectedItems = store.getSelectedRows();
+    store.toggleAll();
 
     const rendererEvent = await dispatchEvent(
       'selectedChange',
       createObject(data, {
-        selectedItems: allChecked
-          ? selectedItems.filter(item => !item.checkable).map(item => item.data)
-          : selectedItems.map(item => item.data),
-        unSelectedItems: allChecked ? selectedItems.map(item => item.data) : [],
+        selectedItems: store.selectedRows.map(row => row.data),
+        unSelectedItems: store.unSelectedRows.map(row => row.data),
         items
       })
     );
+
     if (rendererEvent?.prevented) {
       return;
-    }
-
-    // selectedChange事件注册的动作里，有可能已经通过setValue把selectedRows的情况改了
-    // 没有改的情况下 才会去执行store.toogleAll()
-    if (allChecked === store.allChecked) {
-      store.toggleAll();
     }
 
     this.syncSelected();
@@ -1286,7 +1270,7 @@ export default class Table extends React.Component<TableProps, object> {
       );
       const newValue = {...value, ids: undefined};
       rows.forEach(row => row.change(newValue));
-    } else {
+    } else if (Array.isArray(items)) {
       const rows = store.rows.filter(item => ~items.indexOf(item.pristine));
       rows.forEach(row => row.change(value));
     }
@@ -1628,6 +1612,10 @@ export default class Table extends React.Component<TableProps, object> {
 
     document.addEventListener('mousemove', this.handleColResizeMouseMove);
     document.addEventListener('mouseup', this.handleColResizeMouseUp);
+
+    // 防止选中文本
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   // 垂直线拖拽移动
@@ -1797,8 +1785,6 @@ export default class Table extends React.Component<TableProps, object> {
       store,
       query,
       onQuery,
-      multiple,
-      env,
       render,
       classPrefix: ns,
       resizable,
@@ -1818,13 +1804,22 @@ export default class Table extends React.Component<TableProps, object> {
     );
     Object.assign(style, stickyStyle);
 
+    /** 如果当前列定宽，则不能操作drag bar */
+    const pristineWidth = store.columns?.[column.index]?.pristine?.width;
+    const disableColDrag =
+      '__' !== column.type.substring(0, 2) &&
+      typeof pristineWidth === 'number' &&
+      pristineWidth > 0;
+
     const resizeLine = (
       <div
-        className={cx('Table-content-colDragLine')}
+        className={cx('Table-content-colDragLine', {
+          'Table-content-colDragLine--disabled': disableColDrag
+        })}
         key={`resize-${column.id}`}
         data-index={column.index}
-        onMouseDown={this.handleColResizeMouseDown}
-      ></div>
+        onMouseDown={disableColDrag ? noop : this.handleColResizeMouseDown}
+      />
     );
 
     // th 里面不应该设置
@@ -1842,12 +1837,12 @@ export default class Table extends React.Component<TableProps, object> {
           style={style}
           className={cx(column.pristine.className, stickyClassName)}
         >
-          {store.rows.length && multiple ? (
+          {store.rows.length && store.multiple ? (
             <Checkbox
               classPrefix={ns}
               partial={store.someChecked && !store.allChecked}
               checked={store.someChecked}
-              disabled={store.isSelectionThresholdReached}
+              disabled={store.isSelectionThresholdReached && !store.someChecked}
               onChange={this.handleCheckAll}
             />
           ) : (
@@ -2075,11 +2070,8 @@ export default class Table extends React.Component<TableProps, object> {
     const {
       render,
       store,
-      multiple,
       classPrefix: ns,
       classnames: cx,
-      checkOnItemClick,
-      popOverContainer,
       canAccessSuperData,
       itemBadge,
       translate
@@ -2095,7 +2087,7 @@ export default class Table extends React.Component<TableProps, object> {
         ignoreDrag={ignoreDrag}
         render={render}
         store={store}
-        multiple={multiple}
+        multiple={store.multiple}
         canAccessSuperData={canAccessSuperData}
         classnames={cx}
         classPrefix={ns}
@@ -2227,6 +2219,9 @@ export default class Table extends React.Component<TableProps, object> {
     } else if (type === 'export-excel') {
       this.renderedToolbars.push(type);
       return this.renderExportExcel(toolbar);
+    } else if (type === 'export-excel-template') {
+      this.renderedToolbars.push(type);
+      return this.renderExportExcelTemplate(toolbar);
     }
 
     return void 0;
@@ -2389,15 +2384,7 @@ export default class Table extends React.Component<TableProps, object> {
   }
 
   renderExportExcel(toolbar: ExportExcelToolbar) {
-    const {
-      store,
-      env,
-      classPrefix: ns,
-      classnames: cx,
-      translate: __,
-      data,
-      render
-    } = this.props;
+    const {store, translate: __, render} = this.props;
     let columns = store.filteredColumns || [];
 
     if (!columns) {
@@ -2423,6 +2410,38 @@ export default class Table extends React.Component<TableProps, object> {
               console.error(error);
             } finally {
               store.update({exportExcelLoading: false});
+            }
+          });
+        }
+      }
+    );
+  }
+
+  /**
+   * 导出 Excel 模板
+   */
+  renderExportExcelTemplate(toolbar: ExportExcelToolbar) {
+    const {store, translate: __, render} = this.props;
+    let columns = store.filteredColumns || [];
+
+    if (!columns) {
+      return null;
+    }
+
+    return render(
+      'exportExcelTemplate',
+      {
+        label: __('CRUD.exportExcelTemplate'),
+        ...(toolbar as any),
+        type: 'button'
+      },
+      {
+        onAction: () => {
+          import('exceljs').then(async (ExcelJS: any) => {
+            try {
+              await exportExcel(ExcelJS, this.props, toolbar, true);
+            } catch (error) {
+              console.error(error);
             }
           });
         }
@@ -2561,7 +2580,8 @@ export default class Table extends React.Component<TableProps, object> {
       showFooter,
       store,
       data,
-      classnames: cx
+      classnames: cx,
+      affixFooter
     } = this.props;
 
     if (showFooter === false) {
@@ -2581,26 +2601,35 @@ export default class Table extends React.Component<TableProps, object> {
       : null;
     const actions = this.renderActions('footer');
 
+    const footerNode =
+      footer && (!Array.isArray(footer) || footer.length) ? (
+        <div
+          className={cx(
+            'Table-footer',
+            footerClassName,
+            affixFooter ? 'Table-footer--affix' : ''
+          )}
+          key="footer"
+        >
+          {render('footer', footer, {
+            data: store.getData(data)
+          })}
+        </div>
+      ) : null;
+
     const toolbarNode =
       actions || child ? (
         <div
           className={cx(
             'Table-toolbar Table-footToolbar',
             toolbarClassName,
-            footerToolbarClassName
+            footerToolbarClassName,
+            !footerNode && affixFooter ? 'Table-footToolbar--affix' : ''
           )}
           key="footer-toolbar"
         >
           {actions}
           {child}
-        </div>
-      ) : null;
-    const footerNode =
-      footer && (!Array.isArray(footer) || footer.length) ? (
-        <div className={cx('Table-footer', footerClassName)} key="footer">
-          {render('footer', footer, {
-            data: store.getData(data)
-          })}
         </div>
       ) : null;
     return footerNode && toolbarNode

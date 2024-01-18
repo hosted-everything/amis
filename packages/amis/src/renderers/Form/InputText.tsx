@@ -1,28 +1,29 @@
 import React from 'react';
+import Downshift, {StateChangeOptions} from 'downshift';
+import {matchSorter} from 'match-sorter';
+import debouce from 'lodash/debounce';
+import find from 'lodash/find';
 import {
   OptionsControl,
   OptionsControlProps,
   highlight,
-  FormOptionsControl,
   resolveEventData,
   CustomStyle,
-  getValueByPath,
   PopOver,
   Overlay,
   formatInputThemeCss,
-  setThemeClassName
+  setThemeClassName,
+  ActionObject,
+  filter,
+  autobind,
+  createObject,
+  setVariable,
+  ucFirst,
+  isEffectiveApi,
+  getTestId,
+  buildTestId
 } from 'amis-core';
-import {ActionObject} from 'amis-core';
-import Downshift, {StateChangeOptions} from 'downshift';
-import {matchSorter} from 'match-sorter';
-import debouce from 'lodash/debounce';
-import {filter} from 'amis-core';
-import find from 'lodash/find';
-import {Icon, SpinnerExtraProps} from 'amis-ui';
-import {Input} from 'amis-ui';
-import {autobind, createObject, setVariable, ucFirst} from 'amis-core';
-import {isEffectiveApi} from 'amis-core';
-import {Spinner} from 'amis-ui';
+import {Icon, SpinnerExtraProps, Input, Spinner, OverflowTpl} from 'amis-ui';
 import {ActionSchema} from '../Action';
 import {FormOptionsSchema, SchemaApi} from '../../Schema';
 import {supportStatic} from './StaticHoc';
@@ -118,6 +119,8 @@ export interface TextControlSchema extends FormOptionsSchema {
 
   /** 在内容为空的时候清除值 */
   clearValueOnEmpty?: boolean;
+
+  testid?: string;
 }
 
 export type InputTextRendererEvent =
@@ -297,12 +300,21 @@ export default class TextControl extends React.PureComponent<
   async clearValue() {
     const {onChange, resetValue, dispatchEvent} = this.props;
 
-    const rendererEvent = await dispatchEvent(
+    const clearEvent = await dispatchEvent(
       'clear',
       resolveEventData(this.props, {value: resetValue})
     );
 
-    if (rendererEvent?.prevented) {
+    if (clearEvent?.prevented) {
+      return;
+    }
+
+    const changeEvent = await dispatchEvent(
+      'change',
+      resolveEventData(this.props, {resetValue})
+    );
+
+    if (changeEvent?.prevented) {
       return;
     }
 
@@ -713,6 +725,7 @@ export default class TextControl extends React.PureComponent<
       themeCss,
       css,
       id,
+      testid,
       nativeAutoComplete
     } = this.props;
     let type = this.props.type?.replace(/^(?:native|input)\-/, '');
@@ -786,6 +799,7 @@ export default class TextControl extends React.PureComponent<
                 }
               )}
               onClick={this.handleClick}
+              {...buildTestId(testid, data)}
             >
               <>
                 {filteredPlaceholder &&
@@ -800,9 +814,12 @@ export default class TextControl extends React.PureComponent<
                 {selectedOptions.map((item, index) =>
                   multiple ? (
                     <div className={cx('TextControl-value')} key={index}>
-                      <span className={cx('TextControl-valueLabel')}>
+                      <OverflowTpl
+                        className={cx('TextControl-valueLabel')}
+                        tooltip={`${item[labelField || 'label']}`}
+                      >
                         {`${item[labelField || 'label']}`}
-                      </span>
+                      </OverflowTpl>
                       <Icon
                         icon="close"
                         className={cx('TextControl-valueIcon', 'icon')}
@@ -837,12 +854,14 @@ export default class TextControl extends React.PureComponent<
               </>
 
               {clearable && !disabled && !readOnly && value ? (
-                <a onClick={this.clearValue}>
+                <a
+                  onClick={this.clearValue}
+                  className={cx('TextControl-clear')}
+                >
                   <Icon
                     icon="input-clear"
                     className="icon"
-                    classNameProp={cx('TextControl-clear')}
-                    iconContent="InputBox-clear"
+                    iconContent="InputText-clear"
                   />
                 </a>
               ) : null}
@@ -958,6 +977,7 @@ export default class TextControl extends React.PureComponent<
       themeCss,
       css,
       id,
+      testid,
       nativeAutoComplete
     } = this.props;
 
@@ -980,6 +1000,7 @@ export default class TextControl extends React.PureComponent<
           inputControlClassName,
           inputOnly ? className : ''
         )}
+        {...buildTestId(testid, data)}
       >
         {prefix ? (
           <span className={cx('TextControl-inputPrefix')}>
@@ -1007,6 +1028,7 @@ export default class TextControl extends React.PureComponent<
           className={cx(nativeInputClassName, {
             'TextControl-input-password': type === 'password' && revealPassword
           })}
+          {...buildTestId(testid && `${testid}-input`)}
         />
         {clearable && !disabled && !readOnly && value ? (
           <a onClick={this.clearValue} className={cx('TextControl-clear')}>

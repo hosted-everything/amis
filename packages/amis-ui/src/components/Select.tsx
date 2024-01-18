@@ -8,7 +8,9 @@
 import {
   getOptionValue,
   getOptionValueBindField,
-  uncontrollable
+  labelToString,
+  uncontrollable,
+  buildTestId
 } from 'amis-core';
 import React from 'react';
 import isInteger from 'lodash/isInteger';
@@ -321,6 +323,7 @@ export interface SelectProps
     LocaleProps,
     SpinnerExtraProps {
   className?: string;
+  testid?: string;
   popoverClassName?: string;
   showInvalidMatch?: boolean;
   creatable: boolean;
@@ -477,14 +480,19 @@ export class Select extends React.Component<SelectProps, SelectState> {
 
   @autobind
   open() {
-    this.props.disabled ||
-      this.setState(
-        {
-          isOpen: true,
-          highlightedIndex: -1
-        },
-        () => setTimeout(this.focus, 500)
-      );
+    const {disabled, loading} = this.props;
+
+    if (disabled || loading) {
+      return;
+    }
+
+    this.setState(
+      {
+        isOpen: true,
+        highlightedIndex: -1
+      },
+      () => setTimeout(this.focus, 500)
+    );
   }
 
   @autobind
@@ -505,38 +513,36 @@ export class Select extends React.Component<SelectProps, SelectState> {
 
   @autobind
   toggle(e?: React.MouseEvent<HTMLDivElement>) {
+    const {disabled, loading} = this.props;
+
     if (
-      e &&
-      this.menu.current &&
-      this.menu.current.contains(e.target as HTMLElement)
+      (e &&
+        this.menu.current &&
+        this.menu.current.contains(e.target as HTMLElement)) ||
+      disabled ||
+      loading
     ) {
       return;
     }
 
-    this.props.disabled ||
-      this.setState(
-        {
-          isOpen: !this.state.isOpen,
-          highlightedIndex: -1
-        },
-        this.state.isOpen ? undefined : () => setTimeout(this.focus, 500)
-      );
+    this.setState(
+      {
+        isOpen: !this.state.isOpen,
+        highlightedIndex: -1
+      },
+      this.state.isOpen ? undefined : () => setTimeout(this.focus, 500)
+    );
   }
 
   @autobind
   onFocus(e: any) {
-    const {simpleValue} = this.props;
-    const {selection} = this.state;
+    const {simpleValue, disabled, loading} = this.props;
+    const {selection, isOpen} = this.state;
     const value = simpleValue ? selection.map(item => item.value) : selection;
 
-    this.props.disabled ||
-      this.state.isOpen ||
-      this.setState(
-        {
-          isFocused: true
-        },
-        this.focus
-      );
+    if (!disabled && !loading && !isOpen) {
+      this.setState({isFocused: true}, this.focus);
+    }
 
     this.props.onFocus &&
       this.props.onFocus({
@@ -657,10 +663,18 @@ export class Select extends React.Component<SelectProps, SelectState> {
     }
   }
 
+  /**
+   * DownShift中ESC按键动作会触发change事件，此时selectItem为null，需要单独处理，参考：
+   * {@link https://github.com/downshift-js/downshift/issues/719 GitHub Issue #719}
+   */
   @autobind
   handleChange(selectItem: any) {
     const {onChange, multiple, simpleValue, valueField} = this.props;
     let {selection} = this.state;
+
+    if (selectItem == null) {
+      return;
+    }
 
     if (multiple) {
       const selectionValues = selection.map(item => item[valueField]);
@@ -785,6 +799,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
       translate: __
     } = this.props;
     const selection = this.state.selection;
+    const labelKey = labelField || 'label';
 
     if (!selection.length) {
       return (
@@ -815,8 +830,9 @@ export class Select extends React.Component<SelectProps, SelectState> {
       };
       return [
         ...selection.slice(0, maxVisibleCount),
-        {label: `+ ${selection.length - maxVisibleCount} ...`}
+        {[labelKey]: `+ ${selection.length - maxVisibleCount} ...`}
       ].map((item, index) => {
+        const label = labelToString(item[labelKey]);
         if (index === maxVisibleCount) {
           return (
             <TooltipWrapper
@@ -830,6 +846,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
                       .slice(maxVisibleCount, selection.length)
                       .map((item, index) => {
                         const itemIndex = index + maxVisibleCount;
+                        const label = labelToString(item[labelKey]);
                         return (
                           <div
                             key={itemIndex}
@@ -843,7 +860,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
                             <span className={cx('Select-valueLabel')}>
                               {renderValueLabel
                                 ? renderValueLabel(item)
-                                : item[labelField || 'label']}
+                                : label}
                             </span>
                             <span
                               className={cx('Select-valueIcon', {
@@ -870,9 +887,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
                 } /** 避免点击查看浮窗时呼出下拉菜单 */
               >
                 <span className={cx('Select-valueLabel')}>
-                  {renderValueLabel
-                    ? renderValueLabel(item)
-                    : item[labelField || 'label']}
+                  {renderValueLabel ? renderValueLabel(item) : label}
                 </span>
               </div>
             </TooltipWrapper>
@@ -883,7 +898,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
           <TooltipWrapper
             container={popOverContainer}
             placement={'top'}
-            tooltip={item[labelField || 'label']}
+            tooltip={label}
             trigger={'hover'}
             key={index}
           >
@@ -894,9 +909,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
               })}
             >
               <span className={cx('Select-valueLabel')}>
-                {renderValueLabel
-                  ? renderValueLabel(item)
-                  : item[labelField || 'label']}
+                {renderValueLabel ? renderValueLabel(item) : label}
               </span>
               <span
                 className={cx('Select-valueIcon', {
@@ -913,6 +926,8 @@ export class Select extends React.Component<SelectProps, SelectState> {
     }
 
     return selection.map((item, index) => {
+      const label = labelToString(item[labelKey]);
+
       if (!multiple) {
         return (
           <div
@@ -922,22 +937,18 @@ export class Select extends React.Component<SelectProps, SelectState> {
             })}
             key={index}
           >
-            {renderValueLabel
-              ? renderValueLabel(item)
-              : item[labelField || 'label']}
+            {renderValueLabel ? renderValueLabel(item) : label}
           </div>
         );
       }
 
       return valuesNoWrap ? (
-        `${item[labelField || 'label']}${
-          index === selection.length - 1 ? '' : ' + '
-        }`
+        `${label}${index === selection.length - 1 ? '' : ' + '}`
       ) : (
         <TooltipWrapper
           container={popOverContainer}
           placement={'top'}
-          tooltip={item[labelField || 'label']}
+          tooltip={label}
           trigger={'hover'}
           key={index}
         >
@@ -948,9 +959,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
             })}
           >
             <span className={cx('Select-valueLabel')}>
-              {renderValueLabel
-                ? renderValueLabel(item)
-                : item[labelField || 'label']}
+              {renderValueLabel ? renderValueLabel(item) : label}
             </span>
             <span
               className={cx('Select-valueIcon', {
@@ -978,7 +987,6 @@ export class Select extends React.Component<SelectProps, SelectState> {
     const {
       popOverContainer,
       options,
-      value,
       valueField,
       labelField,
       noResultsText,
@@ -1006,7 +1014,8 @@ export class Select extends React.Component<SelectProps, SelectState> {
       virtualThreshold = 100,
       mobileUI,
       filterOption = defaultFilterOption,
-      overlay
+      overlay,
+      loading
     } = this.props;
     const {selection} = this.state;
 
@@ -1049,6 +1058,9 @@ export class Select extends React.Component<SelectProps, SelectState> {
       if (hideSelected && checked) {
         return null;
       }
+
+      let label = labelToString(item[labelField]);
+
       return (
         <div
           {...getItemProps({
@@ -1099,10 +1111,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
               })
             )
           ) : multiple ? (
-            <div
-              title={item[labelField]}
-              className={cx('Select-option-checkbox')}
-            >
+            <div title={label} className={cx('Select-option-checkbox')}>
               <Checkbox
                 checked={checked}
                 trueValue={item.value}
@@ -1113,9 +1122,9 @@ export class Select extends React.Component<SelectProps, SelectState> {
                 size="sm"
               >
                 {item.disabled
-                  ? item[labelField]
+                  ? label
                   : highlight(
-                      item[labelField],
+                      label,
                       inputValue as string,
                       cx('Select-option-hl')
                     )}
@@ -1126,14 +1135,12 @@ export class Select extends React.Component<SelectProps, SelectState> {
           ) : (
             <span
               className={cx('Select-option-content')}
-              title={
-                typeof item[labelField] === 'string' ? item[labelField] : ''
-              }
+              title={typeof label === 'string' ? label : ''}
             >
               {item.disabled
-                ? item[labelField]
+                ? label
                 : highlight(
-                    item[labelField],
+                    label,
                     inputValue as string,
                     cx('Select-option-hl')
                   )}
@@ -1194,50 +1201,57 @@ export class Select extends React.Component<SelectProps, SelectState> {
             ) : null}
           </div>
         ) : null}
-        {multiple && valuesNoWrap ? (
-          <div className={cx('Select-option')}>
-            {__('Select.selected')}({selectionValues.length})
-          </div>
-        ) : null}
-        {multiple && checkAll && filtedOptions.length ? (
-          <div className={cx('Select-option')}>
-            <Checkbox
-              checked={checkedPartial}
-              partial={checkedPartial && !checkedAll}
-              onChange={this.toggleCheckAll}
-              size="sm"
-            >
-              {__(checkAllLabel)}
-            </Checkbox>
-          </div>
-        ) : null}
 
-        {creatable && !disabled ? (
-          <a className={cx('Select-addBtn')} onClick={this.handleAddClick}>
-            <Icon icon="plus" className="icon" />
-            {__(createBtnLabel)}
-          </a>
-        ) : null}
-
-        {filtedOptions.length ? (
-          filtedOptions.length > virtualThreshold ? ( // 较多数据时才启用 virtuallist，避免滚动条问题
-            <VirtualList
-              height={
-                filtedOptions.length > 8
-                  ? 266
-                  : filtedOptions.length * virtualItemHeight
-              }
-              itemCount={filtedOptions.length}
-              itemSize={virtualItemHeight}
-              renderItem={renderItem}
-            />
-          ) : (
-            filtedOptions.map((item, index) => {
-              return renderItem({index});
-            })
-          )
+        {loading ? (
+          <div className={cx('Select-noResult')}>{__('loading')}</div>
         ) : (
-          <div className={cx('Select-noResult')}>{__(noResultsText)}</div>
+          <>
+            {multiple && valuesNoWrap ? (
+              <div className={cx('Select-option')}>
+                {__('Select.selected')}({selectionValues.length})
+              </div>
+            ) : null}
+            {multiple && checkAll && filtedOptions.length ? (
+              <div className={cx('Select-option')}>
+                <Checkbox
+                  checked={checkedPartial}
+                  partial={checkedPartial && !checkedAll}
+                  onChange={this.toggleCheckAll}
+                  size="sm"
+                >
+                  {__(checkAllLabel)}
+                </Checkbox>
+              </div>
+            ) : null}
+
+            {creatable && !disabled ? (
+              <a className={cx('Select-addBtn')} onClick={this.handleAddClick}>
+                <Icon icon="plus" className="icon" />
+                {__(createBtnLabel)}
+              </a>
+            ) : null}
+
+            {filtedOptions.length ? (
+              filtedOptions.length > virtualThreshold ? ( // 较多数据时才启用 virtuallist，避免滚动条问题
+                <VirtualList
+                  height={
+                    filtedOptions.length > 8
+                      ? 266
+                      : filtedOptions.length * virtualItemHeight
+                  }
+                  itemCount={filtedOptions.length}
+                  itemSize={virtualItemHeight}
+                  renderItem={renderItem}
+                />
+              ) : (
+                filtedOptions.map((item, index) => {
+                  return renderItem({index});
+                })
+              )
+            ) : (
+              <div className={cx('Select-noResult')}>{__(noResultsText)}</div>
+            )}
+          </>
         )}
       </div>
     );
@@ -1271,7 +1285,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
       >
         <PopOver
           overlay
-          className={cx('Select-popover')}
+          className={cx('Select-popover', popoverClassName)}
           style={{
             width:
               (overlay &&
@@ -1307,6 +1321,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
       borderMode,
       mobileUI,
       hasError,
+      testid,
       loadingConfig
     } = this.props;
 
@@ -1325,7 +1340,9 @@ export class Select extends React.Component<SelectProps, SelectState> {
           multiple ? noop : this.handleChange
         }
         onStateChange={this.handleStateChange}
-        itemToString={item => (item ? `${item[labelField]}` : '')}
+        itemToString={item =>
+          item ? `${labelToString(item[labelField])}` : ''
+        }
       >
         {(options: ControllerStateAndHelpers<any>) => {
           const {isOpen} = options;
@@ -1336,6 +1353,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
               onClick={this.toggle}
               onFocus={this.onFocus}
               onBlur={this.onBlur}
+              {...buildTestId(testid)}
               className={cx(
                 `Select`,
                 {
@@ -1345,7 +1363,7 @@ export class Select extends React.Component<SelectProps, SelectState> {
                   [`Select--searchable`]: searchable,
                   'is-opened': isOpen,
                   'is-focused': this.state.isFocused,
-                  'is-disabled': disabled,
+                  'is-disabled': disabled || loading,
                   'is-mobile': mobileUI,
                   'is-error': hasError,
                   [`Select--border${ucFirst(borderMode)}`]: borderMode

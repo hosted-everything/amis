@@ -45,6 +45,7 @@ import {ActionSchema} from './Action';
 import {SchemaRemark} from './Remark';
 import type {IItem} from 'amis-core';
 import type {OnEventProps} from 'amis-core';
+import find from 'lodash/find';
 
 /**
  * 不指定类型默认就是文本
@@ -200,6 +201,11 @@ export interface ListSchema extends BaseSchema {
    * 是否固顶
    */
   affixHeader?: boolean;
+
+  /**
+   * 是否固底
+   */
+  affixFooter?: boolean;
 
   /**
    * 配置某项是否可以点选
@@ -560,11 +566,25 @@ export default class List extends React.Component<ListProps, object> {
     store.reset();
   }
 
-  bulkUpdate(value: object, items: Array<object>) {
-    const {store} = this.props;
+  bulkUpdate(value: any, items: Array<object>) {
+    // const {store} = this.props;
 
-    const items2 = store.items.filter(item => ~items.indexOf(item.pristine));
-    items2.forEach(item => item.change(value));
+    // const items2 = store.items.filter(item => ~items.indexOf(item.pristine));
+    // items2.forEach(item => item.change(value));
+
+    const {store, primaryField} = this.props;
+
+    if (primaryField && value.ids) {
+      const ids = value.ids.split(',');
+      const rows = store.items.filter(item =>
+        find(ids, (id: any) => id && id == item.data[primaryField])
+      );
+      const newValue = {...value, ids: undefined};
+      rows.forEach(item => item.change(newValue));
+    } else if (Array.isArray(items)) {
+      const rows = store.items.filter(item => ~items.indexOf(item.pristine));
+      rows.forEach(item => item.change(value));
+    }
   }
 
   getSelected() {
@@ -795,7 +815,8 @@ export default class List extends React.Component<ListProps, object> {
       render,
       showFooter,
       store,
-      classnames: cx
+      classnames: cx,
+      affixFooter
     } = this.props;
 
     if (showFooter === false) {
@@ -815,22 +836,35 @@ export default class List extends React.Component<ListProps, object> {
       : null;
     const actions = this.renderActions('footer');
 
+    const footerNode =
+      footer && (!Array.isArray(footer) || footer.length) ? (
+        <div
+          className={cx(
+            'List-footer',
+            footerClassName,
+            affixFooter ? 'List-footer--affix' : ''
+          )}
+          key="footer"
+        >
+          {render('footer', footer)}
+        </div>
+      ) : null;
+
     const toolbarNode =
       actions || child ? (
         <div
-          className={cx('List-toolbar', footerClassName)}
+          className={cx(
+            'List-toolbar',
+            footerClassName,
+            !footerNode && affixFooter ? 'List-footToolbar--affix' : ''
+          )}
           key="footer-toolbar"
         >
           {actions}
           {child}
         </div>
       ) : null;
-    const footerNode =
-      footer && (!Array.isArray(footer) || footer.length) ? (
-        <div className={cx('List-footer', footerClassName)} key="footer">
-          {render('footer', footer)}
-        </div>
-      ) : null;
+
     return footerNode && toolbarNode
       ? [toolbarNode, footerNode]
       : footerNode || toolbarNode || null;

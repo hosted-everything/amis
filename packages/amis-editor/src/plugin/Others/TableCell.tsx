@@ -98,6 +98,10 @@ export class TableCellPlugin extends BasePlugin {
               ]
             },
 
+            getSchemaTpl('icon', {
+              name: 'quickEdit.icon'
+            }),
+
             getSchemaTpl('switch', {
               name: 'quickEdit.saveImmediately',
               label: '是否立即保存',
@@ -130,17 +134,21 @@ export class TableCellPlugin extends BasePlugin {
                 if (value.mode) {
                   delete value.mode;
                 }
+                const originSaveImmediately = value.saveImmediately;
+                if (value.saveImmediately) {
+                  delete value.saveImmediately;
+                }
                 value =
                   value.body && ['container', 'wrapper'].includes(value.type)
                     ? {
                         // schema中存在容器，用自己的就行
-                        type: 'container',
+                        type: 'wrapper',
                         body: [],
                         ...value
                       }
                     : {
                         // schema中不存在容器，打开子编辑器时需要包裹一层
-                        type: 'container',
+                        type: 'wrapper',
                         body: [
                           {
                             type: 'input-text',
@@ -165,7 +173,8 @@ export class TableCellPlugin extends BasePlugin {
                           onChange(
                             {
                               ...value,
-                              mode: originMode
+                              mode: originMode,
+                              saveImmediately: originSaveImmediately
                             },
                             'quickEdit'
                           )

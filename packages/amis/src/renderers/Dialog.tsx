@@ -6,7 +6,9 @@ import {
   isPureVariable,
   resolveVariableAndFilter,
   setVariable,
-  setThemeClassName
+  setThemeClassName,
+  ValidateError,
+  getTestId
 } from 'amis-core';
 import {Renderer, RendererProps} from 'amis-core';
 import {SchemaNode, Schema, ActionObject} from 'amis-core';
@@ -46,6 +48,8 @@ export interface DialogSchema extends BaseSchema {
    * 默认不用填写，自动会创建确认和取消按钮。
    */
   actions?: Array<ActionSchema>;
+
+  testid?: string;
 
   /**
    * 内容区域
@@ -175,7 +179,7 @@ export default class Dialog extends React.Component<DialogProps> {
     title: 'Dialog.title',
     bodyClassName: '',
     confirm: true,
-    show: true,
+    show: false,
     lazyRender: false,
     showCloseButton: true,
     wrapperComponent: Modal,
@@ -230,7 +234,7 @@ export default class Dialog extends React.Component<DialogProps> {
   }
 
   buildActions(): Array<ActionSchema> {
-    const {actions, confirm, translate: __} = this.props;
+    const {actions, confirm, testid, translate: __} = this.props;
 
     if (typeof actions !== 'undefined') {
       return actions;
@@ -239,6 +243,7 @@ export default class Dialog extends React.Component<DialogProps> {
     let ret: Array<ActionSchema> = [];
     ret.push({
       type: 'button',
+      testid: getTestId(testid && `${testid}-cancel`),
       actionType: 'cancel',
       label: __('cancel')
     });
@@ -246,6 +251,7 @@ export default class Dialog extends React.Component<DialogProps> {
     if (confirm) {
       ret.push({
         type: 'button',
+        testid: getTestId(testid && `${testid}-confirm`),
         actionType: 'confirm',
         label: __('confirm'),
         primary: true
@@ -805,6 +811,7 @@ export default class Dialog extends React.Component<DialogProps> {
 })
 export class DialogRenderer extends Dialog {
   static contextType = ScopedContext;
+  clearErrorTimer: ReturnType<typeof setTimeout>;
 
   constructor(props: DialogProps, context: IScopedContext) {
     super(props);
@@ -817,6 +824,7 @@ export class DialogRenderer extends Dialog {
     const scoped = this.context as IScopedContext;
     scoped.unRegisterComponent(this);
     super.componentWillUnmount();
+    clearTimeout(this.clearErrorTimer);
   }
 
   tryChildrenToHandle(
@@ -897,6 +905,16 @@ export class DialogRenderer extends Dialog {
           }
           store.updateMessage(reason.message, true);
           store.markBusying(false);
+
+          if (reason.constructor?.name === ValidateError.name) {
+            clearTimeout(this.clearErrorTimer);
+            this.clearErrorTimer = setTimeout(() => {
+              if (this.isDead) {
+                return;
+              }
+              store.updateMessage('');
+            }, 3000);
+          }
         });
 
       return true;
@@ -919,8 +937,10 @@ export class DialogRenderer extends Dialog {
     const {onAction, store, onConfirm, env, dispatchEvent, onClose} =
       this.props;
     if (action.from === this.$$id) {
-      // 可能是孩子又派送回来到自己了，这时候就不要处理了。
-      return;
+      // 如果是从 children 里面委托过来的，那就直接向上冒泡。
+      return onAction
+        ? onAction(e, action, data, throwErrors, delegate || this.context)
+        : false;
     }
 
     const scoped = this.context as IScopedContext;
@@ -1008,7 +1028,8 @@ export class DialogRenderer extends Dialog {
           typeof action.close === 'string' &&
           this.closeTarget(action.close);
       }
-    } else if (this.tryChildrenToHandle(action, data)) {
+    } else if (!action.from && this.tryChildrenToHandle(action, data)) {
+      // 如果有 from 了，说明是从子节点冒泡上来的，那就不再走让子节点处理的逻辑。
       // do nothing
     } else if (action.actionType === 'ajax') {
       store.setCurrentAction(action);
