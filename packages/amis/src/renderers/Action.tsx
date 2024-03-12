@@ -10,8 +10,7 @@ import {
   RendererProps,
   ScopedContext,
   uuid,
-  setThemeClassName,
-  getTestId
+  setThemeClassName
 } from 'amis-core';
 import {filter} from 'amis-core';
 import {BadgeObject, Button, SpinnerExtraProps} from 'amis-ui';
@@ -23,8 +22,6 @@ export interface ButtonSchema extends BaseSchema {
    * 主要用于用户行为跟踪里区分是哪个按钮
    */
   id?: string;
-
-  testid?: string;
 
   /**
    * 是否为块状展示，默认为内联。
@@ -247,6 +244,11 @@ export interface DialogActionSchema extends ButtonSchema {
   nextCondition?: SchemaExpression;
   reload?: SchemaReload;
   redirect?: string;
+
+  /**
+   * 数据映射
+   */
+  data?: any;
 }
 
 export interface DrawerActionSchema extends ButtonSchema {
@@ -267,6 +269,11 @@ export interface DrawerActionSchema extends ButtonSchema {
   nextCondition?: SchemaExpression;
   reload?: SchemaReload;
   redirect?: string;
+
+  /**
+   * 数据映射
+   */
+  data?: any;
 }
 
 export interface ToastActionSchema extends ButtonSchema {
@@ -739,7 +746,7 @@ export class Action extends React.Component<ActionProps, ActionState> {
       wrapperCustomStyle,
       css,
       id,
-      testid,
+      testIdBuilder,
       env
     } = this.props;
 
@@ -791,7 +798,12 @@ export class Action extends React.Component<ActionProps, ActionState> {
         className="Button-icon"
         classNameProp={cx(
           iconClassName,
-          setThemeClassName('iconClassName', id, themeCss || css)
+          setThemeClassName({
+            ...this.props,
+            name: 'iconClassName',
+            id,
+            themeCss: themeCss || css
+          })
         )}
       />
     );
@@ -802,7 +814,12 @@ export class Action extends React.Component<ActionProps, ActionState> {
         className="Button-icon"
         classNameProp={cx(
           rightIconClassName,
-          setThemeClassName('iconClassName', id, themeCss || css)
+          setThemeClassName({
+            ...this.props,
+            name: 'iconClassName',
+            id,
+            themeCss: themeCss || css
+          })
         )}
       />
     );
@@ -813,13 +830,23 @@ export class Action extends React.Component<ActionProps, ActionState> {
           loadingConfig={loadingConfig}
           className={cx(
             className,
-            setThemeClassName('wrapperCustomStyle', id, wrapperCustomStyle),
-            setThemeClassName('className', id, themeCss || css),
+            setThemeClassName({
+              ...this.props,
+              name: 'wrapperCustomStyle',
+              id,
+              themeCss: wrapperCustomStyle
+            }),
+            setThemeClassName({
+              ...this.props,
+              name: 'className',
+              id,
+              themeCss: themeCss || css
+            }),
             {
               [activeClassName || 'is-active']: isActive
             }
           )}
-          testid={getTestId(testid, data)}
+          testIdBuilder={testIdBuilder}
           style={style}
           size={size}
           level={
@@ -851,6 +878,7 @@ export class Action extends React.Component<ActionProps, ActionState> {
         </Button>
         {/* button自定义样式 */}
         <CustomStyle
+          {...this.props}
           config={{
             themeCss: themeCss || css,
             classNames: [

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import {ClassNamesFn, themeable} from 'amis-core';
+import {ClassNamesFn, TestIdBuilder, themeable} from 'amis-core';
 import {Spinner} from './Spinner';
 
 const sizeMap = {
@@ -44,6 +44,7 @@ interface SwitchProps {
     root?: string;
     show?: boolean;
   };
+  testIdBuilder?: TestIdBuilder;
 }
 
 export class Switch extends React.PureComponent<SwitchProps, any> {
@@ -87,6 +88,7 @@ export class Switch extends React.PureComponent<SwitchProps, any> {
       classnames: cx,
       loading,
       loadingConfig,
+      testIdBuilder,
       ...rest
     } = this.props;
 
@@ -110,6 +112,7 @@ export class Switch extends React.PureComponent<SwitchProps, any> {
           'is-disabled': isDisabled
         })}
         data-role="switch"
+        {...testIdBuilder?.getTestId()}
       >
         <input
           type="checkbox"

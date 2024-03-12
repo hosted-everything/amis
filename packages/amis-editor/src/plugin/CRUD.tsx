@@ -697,6 +697,17 @@ export class CRUDPlugin extends BasePlugin {
         }
         return {
           ...value,
+          ...(value.mode !== 'table'
+            ? {
+                columns:
+                  value.columns ||
+                  this.transformByMode({
+                    from: value.mode,
+                    to: 'table',
+                    schema: value
+                  })
+              }
+            : {}),
           __filterColumnCount: value?.filter?.columnCount || 3,
           __features: __features,
           __LastFeatures: [...__features]
@@ -801,14 +812,19 @@ export class CRUDPlugin extends BasePlugin {
                   api: valueSchema.api?.method?.match(/^(post|put)$/i)
                     ? valueSchema.api
                     : {...valueSchema.api, method: 'post'},
-                  body: valueSchema.columns.map((column: ColumnItem) => {
-                    const type = column.type;
-                    return {
-                      type: viewTypeToEditType(type),
-                      name: column.name,
-                      label: column.label
-                    };
-                  })
+                  body: valueSchema.columns
+                    .filter(
+                      ({type}: any) =>
+                        type !== 'progress' && type !== 'operation'
+                    )
+                    .map((column: ColumnItem) => {
+                      const type = column.type;
+                      return {
+                        type: viewTypeToEditType(type),
+                        name: column.name,
+                        label: column.label
+                      };
+                    })
                 };
                 valueSchema.headerToolbar = [createSchemaBase, 'bulkActions'];
               }
@@ -858,7 +874,30 @@ export class CRUDPlugin extends BasePlugin {
             .concat(operButtons);
         }
 
-        return valueSchema;
+        const {card, columns, listItem, ...rest} = valueSchema;
+
+        return {
+          ...rest,
+          ...(valueSchema.mode === 'cards'
+            ? {
+                card: this.transformByMode({
+                  from: 'table',
+                  to: 'cards',
+                  schema: valueSchema
+                })
+              }
+            : valueSchema.mode === 'list'
+            ? {
+                listItem: this.transformByMode({
+                  from: 'table',
+                  to: 'list',
+                  schema: valueSchema
+                })
+              }
+            : columns
+            ? {columns}
+            : {})
+        };
       },
       canRebuild: true
     };

@@ -809,12 +809,6 @@
     margin-bottom: 0;
   }
 
-  .#{$ns}Form-item:nth-last-of-type(1) {
-    &::after {
-      display: none;
-    }
-  }
-
   .#{$ns}Form-item.is-placeholder::after {
     display: none;
   }
@@ -850,5 +844,15 @@
     &::after {
       display: none;
     }
+  }
+}
+
+.#{$ns}Autofill-popOver {
+  border: none;
+  min-width: px2rem(320px);
+  max-width: px2rem(640px);
+
+  > .#{$ns}Panel {
+    margin: 0;
   }
 }
