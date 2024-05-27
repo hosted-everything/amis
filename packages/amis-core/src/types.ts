@@ -221,6 +221,7 @@ export interface ApiObject extends BaseApiObject {
     withCredentials?: boolean;
     cancelExecutor?: (cancel: Function) => void;
   };
+  originUrl?: string; // 原始的 url 地址，记录将 data 拼接到 query 之前的地址
   jsonql?: any;
   graphql?: string;
   operationName?: string;
@@ -353,10 +354,17 @@ export interface ActionObject extends ButtonObject {
     | 'expand'
     | 'collapse'
     | 'step-submit'
+    | 'select'
     | 'selectAll'
+    | 'clearAll'
     | 'changeTabKey'
     | 'clearSearch'
-    | 'submitQuickEdit';
+    | 'submitQuickEdit'
+    | 'initDrag'
+    | 'cancelDrag'
+    | 'toggleExpanded'
+    | 'setExpanded';
+
   api?: BaseApiObject | string;
   asyncApi?: BaseApiObject | string;
   payload?: any;

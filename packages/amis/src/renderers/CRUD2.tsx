@@ -1056,14 +1056,35 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       // @ts-ignore
       return this[`handle${upperFirst(action.actionType)}`](data);
     }
-    // const {onAction, data: ctx} = this.props;
-    // return this.props.onAction?.(
-    //   undefined,
-    //   action,
-    //   ctx,
-    //   throwErrors,
-    //   undefined
-    // );
+  }
+
+  @autobind
+  handleAction(
+    e: React.UIEvent<any> | undefined,
+    action: ActionObject,
+    ctx: object,
+    throwErrors: boolean = false,
+    delegate?: IScopedContext
+  ) {
+    if (
+      [
+        'stopAutoRefresh',
+        'reload',
+        'search',
+        'startAutoRefresh',
+        'loadMore'
+      ].includes(action.actionType as any)
+    ) {
+      return this.doAction(action, ctx, throwErrors);
+    } else {
+      return this.props.onAction(
+        e,
+        action,
+        ctx,
+        throwErrors,
+        delegate || this.context
+      );
+    }
   }
 
   unSelectItem(item: any, index: number) {
@@ -1313,7 +1334,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
       columnsTogglable,
       headerToolbarClassName,
       footerToolbarClassName,
-      testid,
+      id,
       ...rest
     } = this.props;
 
@@ -1323,6 +1344,7 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
           'is-loading': store.loading
         })}
         style={style}
+        data-id={id}
       >
         <div className={cx('Crud2-filter')}>
           {this.renderFilter(filterSchema)}
@@ -1381,8 +1403,10 @@ export default class CRUD2 extends React.Component<CRUD2Props, any> {
             onSearch: this.handleQuerySearch,
             onSort: this.handleQuerySearch,
             onSelect: this.handleSelect,
+            onAction: this.handleAction,
             data: store.mergedData,
-            loading: store.loading
+            loading: store.loading,
+            host: this
           }
         )}
         {/* spinner可以交给孩子处理 */}

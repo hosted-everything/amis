@@ -14,7 +14,8 @@ import {
   buildStyle,
   filter,
   evalExpression,
-  insertStyle
+  insertStyle,
+  isObjectShallowModified
 } from 'amis-core';
 import {
   guid,
@@ -651,7 +652,7 @@ export class Navigation extends React.Component<
                   <Icon
                     key={`icon-${i}`}
                     cx={cx}
-                    icon={item['icon']}
+                    icon={item['icon'] || item}
                     className={isCollapsedNode ? '' : isAfter ? 'ml-2' : 'mr-2'}
                   />
                 );
@@ -891,7 +892,10 @@ export class Navigation extends React.Component<
         classNameId = cx(`Nav-PopupClassName-${id}`);
         if (!document.getElementById(classNameId)) {
           // rc-menu的浮层只支持配置popupClassName 因此需要将配置的style插入到页面 然后将className赋值给浮层
-          insertStyle(`.${classNameId} ${styleText}`, classNameId);
+          insertStyle({
+            style: `.${classNameId} ${styleText}`,
+            classId: classNameId
+          });
         }
       } catch (e) {}
     }
@@ -1216,7 +1220,16 @@ const ConditionBuilderWithRemoteOptions = withRemoteConfig({
         this.props.updateConfig(this.props.config, 'location-change');
       } else if (!isEqual(this.props.links, prevProps.links)) {
         this.props.updateConfig(this.props.links, 'update');
-      } else if (!isEqual(this.props.data, prevProps.data)) {
+      } else if (
+        isObjectShallowModified(
+          this.props.data,
+          prevProps.data,
+          false,
+          undefined,
+          undefined,
+          10
+        )
+      ) {
         this.props.updateConfig(this.props.config, 'data-change');
       }
 
@@ -1517,7 +1530,9 @@ export class NavigationRenderer extends React.Component<RendererProps> {
 
   doAction(
     action: ActionObject,
-    args: {
+    data: object,
+    throwErrors?: boolean,
+    args?: {
       value?: string | {[key: string]: string};
     }
   ) {

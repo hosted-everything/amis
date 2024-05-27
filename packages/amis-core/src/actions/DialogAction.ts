@@ -83,17 +83,29 @@ export class DialogAction implements RendererAction {
       return;
     }
 
-    let ret = renderer.props.onAction?.(
-      event,
-      {
-        actionType: 'dialog',
-        dialog: action.dialog,
-        reload: 'none',
-        data: action.rawData
-      },
-      action.data
-    );
+    let ret = renderer.handleAction
+      ? renderer.handleAction(
+          event,
+          {
+            actionType: 'dialog',
+            dialog: action.dialog,
+            reload: 'none',
+            data: action.rawData
+          },
+          action.data
+        )
+      : renderer.props.onAction?.(
+          event,
+          {
+            actionType: 'dialog',
+            dialog: action.dialog,
+            reload: 'none',
+            data: action.rawData
+          },
+          action.data
+        );
 
+    event.pendingPromise.push(ret);
     if (action.waitForAction) {
       const {confirmed, value} = await ret;
 
@@ -154,7 +166,8 @@ export class AlertAction implements RendererAction {
   ) {
     event.context.env.alert?.(
       filter(action.dialog?.msg, event.data) ?? action.args?.msg,
-      filter(action.dialog?.title, event.data) ?? action.args?.title
+      filter(action.dialog?.title, event.data) ?? action.args?.title,
+      filter(action.dialog?.className, event.data) ?? ''
     );
   }
 }
@@ -199,7 +212,8 @@ export class ConfirmAction implements RendererAction {
             action.args?.confirmBtnLevel,
           cancelBtnLevel:
             filter(action.dialog?.cancelBtnLevel, event.data) ||
-            action.args?.cancelBtnLevel
+            action.args?.cancelBtnLevel,
+          className: filter(action.dialog?.className, event.data) || ''
         }
       );
 
@@ -208,17 +222,29 @@ export class ConfirmAction implements RendererAction {
 
     // 自定义弹窗内容
     const confirmed = await new Promise((resolve, reject) => {
-      renderer.props.onAction?.(
-        event,
-        {
-          actionType: 'dialog',
-          dialog: modal,
-          data: action.rawData,
-          reload: 'none',
-          callback: (result: boolean) => resolve(result)
-        },
-        action.data
-      );
+      renderer.handleAction
+        ? renderer.handleAction(
+            event,
+            {
+              actionType: 'dialog',
+              dialog: modal,
+              data: action.rawData,
+              reload: 'none',
+              callback: (result: boolean) => resolve(result)
+            },
+            action.data
+          )
+        : renderer.props.onAction?.(
+            event,
+            {
+              actionType: 'dialog',
+              dialog: modal,
+              data: action.rawData,
+              reload: 'none',
+              callback: (result: boolean) => resolve(result)
+            },
+            action.data
+          );
     });
 
     return confirmed;
