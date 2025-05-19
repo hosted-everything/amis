@@ -1,3 +1,4 @@
+import React from 'react';
 import cx from 'classnames';
 import DeepDiff from 'deep-diff';
 import flatten from 'lodash/flatten';
@@ -19,12 +20,17 @@ import {
   EditorNodeType,
   ScaffoldForm,
   RegionConfig,
+  getI18nEnabled,
   registerEditorPlugin,
-  JSONPipeOut,
-  InsertEventContext,
-  MoveEventContext,
-  DeleteEventContext
+  JSONPipeOut
 } from 'amis-editor-core';
+import type {FormSchema} from 'amis';
+import type {
+  IFormStore,
+  IFormItemStore,
+  Schema,
+  RendererConfig
+} from 'amis-core';
 import {
   DSFeatureType,
   DSBuilderManager,
@@ -33,17 +39,14 @@ import {
   ApiDSBuilderKey
 } from '../../builder';
 import {FormOperatorMap} from '../../builder/constants';
-import {getEventControlConfig} from '../../renderer/event-control/helper';
+import {
+  getEventControlConfig,
+  getActionCommonProps
+} from '../../renderer/event-control/helper';
 import {FieldSetting} from '../../renderer/FieldSetting';
-import {_isModelComp} from '../../util';
+import {_isModelComp, generateId} from '../../util';
+import {InlineEditableElement} from 'amis-editor-core';
 
-import type {FormSchema} from 'amis/lib/Schema';
-import type {
-  IFormStore,
-  IFormItemStore,
-  Schema,
-  RendererConfig
-} from 'amis-core';
 import type {FormScaffoldConfig} from '../../builder';
 
 export type FormPluginFeat = Extract<
@@ -98,6 +101,7 @@ export class FormPlugin extends BasePlugin {
       {
         label: '文本框',
         type: 'input-text',
+        id: generateId(),
         name: 'text'
       }
     ]
@@ -123,13 +127,27 @@ export class FormPlugin extends BasePlugin {
       label: '表单集合',
       matchRegion: (elem: JSX.Element) => !!elem?.props.noValidate,
       renderMethod: 'renderBody',
-      preferTag: '表单项'
+      preferTag: '表单项',
+      dndMode: (schema: any) => {
+        if (schema.mode === 'flex') {
+          return 'flex';
+        }
+        return 'default';
+      }
     },
 
     {
       label: '操作区',
       key: 'actions',
       preferTag: '按钮'
+    }
+  ];
+
+  // 定义可以内联编辑的元素
+  inlineEditableElements: Array<InlineEditableElement> = [
+    {
+      match: ':scope.cxd-Panel .cxd-Panel-title',
+      key: 'title'
     }
   ];
 
@@ -338,32 +356,53 @@ export class FormPlugin extends BasePlugin {
     {
       actionLabel: '提交表单',
       actionType: 'submit',
-      description: '触发表单提交'
+      description: '触发表单提交',
+      ...getActionCommonProps('submit')
     },
     {
       actionLabel: '重置表单',
       actionType: 'reset',
-      description: '触发表单重置'
+      description: '触发表单重置',
+      ...getActionCommonProps('reset')
     },
     {
       actionLabel: '清空表单',
       actionType: 'clear',
-      description: '触发表单清空'
+      description: '触发表单清空',
+      ...getActionCommonProps('clear')
     },
     {
       actionLabel: '校验表单',
       actionType: 'validate',
-      description: '触发表单校验'
+      description: '触发表单校验',
+      descDetail: (info: any, context: any, props: any) => {
+        return (
+          <div className="action-desc">
+            校验
+            <span className="variable-left variable-right">
+              {info?.rendererLabel}
+            </span>
+            的数据
+          </div>
+        );
+      }
     },
     {
       actionLabel: '重新加载',
       actionType: 'reload',
-      description: '触发组件数据刷新并重新渲染'
+      description: '触发组件数据刷新并重新渲染',
+      ...getActionCommonProps('reload')
     },
     {
       actionLabel: '变量赋值',
       actionType: 'setValue',
-      description: '触发组件数据更新'
+      description: '触发组件数据更新',
+      ...getActionCommonProps('setValue')
+    },
+    {
+      actionLabel: '清除校验状态',
+      actionType: 'clearError',
+      description: '清除表单校验产生的错误状态'
     }
   ];
 
@@ -604,19 +643,28 @@ export class FormPlugin extends BasePlugin {
       DSFeatureEnum.BulkEdit,
       DSFeatureEnum.View
     ];
-    if (schema.hasOwnProperty('feat')) {
-      return validFeat.includes(schema.feat)
-        ? schema.feat
-        : DSFeatureEnum.Insert;
-    }
 
-    if (schema.initApi != null && schema.api != null) {
+    // 判断表单功能类型
+    const {initApi, api, feat} = schema;
+
+    // 根据API配置判断基础功能类型
+    if (initApi && api) {
       return DSFeatureEnum.Edit;
-    } else if (schema.initApi != null && schema.api == null) {
+    }
+    if (initApi && !api) {
       return DSFeatureEnum.View;
-    } else {
+    }
+    if (!initApi && api) {
       return DSFeatureEnum.Insert;
     }
+
+    // 检查自定义功能类型
+    if (feat && validFeat.includes(feat)) {
+      return feat;
+    }
+
+    // 默认返回插入模式
+    return DSFeatureEnum.Insert;
   }
 
   panelBodyCreator = (context: BaseEventContext) => {
@@ -627,7 +675,9 @@ export class FormPlugin extends BasePlugin {
       /\/crud2\/filter\/form$/.test(context.path) ||
       /body\/0\/filter$/.test(context.schemaPath);
     /** 表单是否位于Dialog内 */
-    const isInDialog: boolean = context.path?.includes?.('dialog/');
+    const isInDialog: boolean =
+      context.path?.includes?.('dialog/') ||
+      context.path?.includes?.('drawer/');
     /** 是否使用Panel包裹 */
     const isWrapped = 'this.wrapWithPanel !== false';
     const justifyLayout = (left: number = 2) => ({
@@ -822,15 +872,21 @@ export class FormPlugin extends BasePlugin {
                 form: IFormStore
               ) => {
                 if (value !== oldValue) {
-                  form.setValues({
-                    dsType: this.dsManager.getDefaultBuilderKey(),
-                    initApi:
-                      DSFeatureEnum.Insert === value ||
-                      DSFeatureEnum.BulkEdit === value
-                        ? undefined
-                        : '',
-                    api: undefined
-                  });
+                  const newSchema: any = {
+                    dsType: this.dsManager.getDefaultBuilderKey()
+                  };
+
+                  // 批量编辑和新增需要删除获取数据接口
+                  if (
+                    DSFeatureEnum.Insert === value ||
+                    DSFeatureEnum.BulkEdit === value
+                  ) {
+                    newSchema.initApi = undefined;
+                  } else if (DSFeatureEnum.View === value) {
+                    newSchema.api = undefined;
+                  }
+                  // 删除数据源无用配置
+                  form.setValues(newSchema);
                 }
               }
             },
@@ -839,6 +895,7 @@ export class FormPlugin extends BasePlugin {
         };
       }
     };
+    const i18nEnabled = getI18nEnabled();
 
     return [
       getSchemaTpl('tabs', [
@@ -851,12 +908,10 @@ export class FormPlugin extends BasePlugin {
               {
                 title: '基本',
                 body: [
-                  {
-                    name: 'title',
-                    type: 'input-text',
+                  getSchemaTpl('pageTitle', {
                     label: '标题',
                     visibleOn: isWrapped
-                  },
+                  }),
                   getSchemaTpl('switch', {
                     name: 'autoFocus',
                     label: tipedLabel(
@@ -1055,7 +1110,7 @@ export class FormPlugin extends BasePlugin {
                       {
                         name: 'message',
                         label: '报错提示',
-                        type: 'input-text',
+                        type: i18nEnabled ? 'input-text-i18n' : 'input-text',
                         ...justifyLayout(4)
                       }
                     ]
@@ -1091,21 +1146,76 @@ export class FormPlugin extends BasePlugin {
             {
               title: '布局',
               body: [
-                getSchemaTpl('formItemMode', {
-                  isForm: true,
-                  /** Form组件默认为normal模式 */
-                  defaultValue: 'normal'
-                }),
-                getSchemaTpl('horizontal'),
+                {
+                  label: '布局',
+                  name: 'mode',
+                  type: 'select',
+                  pipeIn: defaultValue('flex'),
+                  options: [
+                    {
+                      label: '网格',
+                      value: 'flex'
+                    },
+                    {
+                      label: '内联',
+                      value: 'inline'
+                    },
+                    {
+                      label: '水平',
+                      value: 'horizontal'
+                    },
+                    {
+                      label: '垂直',
+                      value: 'normal'
+                    }
+                  ],
+                  pipeOut: (v: string) => (v ? v : undefined),
+                  onChange: (
+                    value: string,
+                    oldValue: string,
+                    model: any,
+                    form: any
+                  ) => {
+                    const body = [...form.data.body];
+                    let temp = body;
+                    if (value === 'flex') {
+                      temp = body?.map((item: any, index: number) => {
+                        return {
+                          ...item,
+                          row: index,
+                          mode: undefined
+                        };
+                      });
+                    } else {
+                      temp = body?.map((item: any, index: number) => {
+                        return {
+                          ...item,
+                          row: undefined,
+                          colSize: undefined,
+                          labelAlign: undefined,
+                          mode: undefined
+                        };
+                      });
+                    }
+                    form.setValueByName('body', temp);
+                  }
+                },
+                {
+                  type: 'col-count',
+                  name: '__rolCount',
+                  label: tipedLabel('列数', '仅对PC页面生效'),
+                  visibleOn: 'this.mode === "flex"'
+                },
                 {
                   label: '列数',
                   name: 'columnCount',
                   type: 'input-number',
                   step: 1,
-                  min: 0,
+                  min: 1,
                   precision: 0,
                   resetValue: '',
                   unitOptions: ['列'],
+                  hiddenOn: 'this.mode === "flex"',
                   pipeOut: (value: string) => {
                     if (value && typeof value === 'string') {
                       const count = Number.parseInt(
@@ -1120,12 +1230,7 @@ export class FormPlugin extends BasePlugin {
                       return undefined;
                     }
                   }
-                }
-              ]
-            },
-            {
-              title: '其他',
-              body: [
+                },
                 getSchemaTpl('switch', {
                   name: 'wrapWithPanel',
                   label: tipedLabel(
@@ -1142,6 +1247,142 @@ export class FormPlugin extends BasePlugin {
                   ),
                   visibleOn: isWrapped
                 })
+              ]
+            },
+            getSchemaTpl('theme:base', {
+              classname: 'formControlClassName',
+              title: '表单样式',
+              needState: false,
+              hiddenOn: isWrapped
+            }),
+            getSchemaTpl('theme:base', {
+              classname: 'panelClassName',
+              title: 'Panel样式',
+              editorValueToken: '--Panel',
+              hidePadding: true,
+              needState: false,
+              visibleOn: isWrapped
+            }),
+            getSchemaTpl('theme:base', {
+              classname: 'headerControlClassName',
+              title: '标题区样式',
+              visibleOn: isWrapped,
+              editorValueToken: '--Panel-heading',
+              hideRadius: true,
+              hideShadow: true,
+              hideMargin: true,
+              needState: false,
+              extra: [
+                getSchemaTpl('theme:font', {
+                  name: 'themeCss.headerTitleControlClassName.font',
+                  editorValueToken: '--Panel-heading'
+                })
+              ]
+            }),
+
+            getSchemaTpl('theme:base', {
+              classname: 'bodyControlClassName',
+              title: '内容区样式',
+              editorValueToken: '--Panel-body',
+              hideRadius: true,
+              hideShadow: true,
+              hideBorder: true,
+              hideMargin: true,
+              hideBackground: true,
+              needState: false,
+              visibleOn: isWrapped
+            }),
+            {
+              title: '表单项样式',
+              body: [
+                {
+                  type: 'select',
+                  name: 'labelAlign',
+                  label: '标题位置',
+                  selectFirst: true,
+                  hiddenOn:
+                    'this.mode === "normal" || this.mode === "inline" || this.mode === "horizontal"',
+                  options: [
+                    {
+                      label: '上下布局',
+                      value: 'top'
+                    },
+                    {
+                      label: '水平居左',
+                      value: 'left'
+                    },
+                    {
+                      label: '水平居右',
+                      value: 'right'
+                    }
+                  ]
+                },
+                {
+                  type: 'select',
+                  name: 'labelAlign',
+                  label: '标题位置',
+                  selectFirst: true,
+                  hiddenOn:
+                    'this.mode === "normal" || this.mode === "inline" || this.mode === "flex"',
+                  options: [
+                    {
+                      label: '水平居左',
+                      value: 'left'
+                    },
+                    {
+                      label: '水平居右',
+                      value: 'right'
+                    }
+                  ]
+                },
+                getSchemaTpl('theme:select', {
+                  label: '标题宽度',
+                  name: 'labelWidth',
+                  hiddenOn:
+                    'this.mode === "normal" || this.labelAlign === "top"'
+                }),
+
+                getSchemaTpl('theme:font', {
+                  label: '标题文字',
+                  editorValueToken: '--Form-item',
+                  hasSenior: false,
+                  name: 'themeCss.itemLabelClassName.font'
+                }),
+                getSchemaTpl('theme:paddingAndMargin', {
+                  label: '标题边距',
+                  hidePadding: true,
+                  name: 'themeCss.itemLabelClassName.padding-and-margin'
+                }),
+                getSchemaTpl('theme:paddingAndMargin', {
+                  label: '表单项边距',
+                  hidePadding: true,
+                  name: 'themeCss.itemClassName.padding-and-margin'
+                }),
+                getSchemaTpl('theme:font', {
+                  label: '静态展示文字',
+                  editorValueToken: '--Form-static',
+                  name: 'themeCss.staticClassName.font',
+                  visibleOn: '!!this.static || !!this.staticOn'
+                })
+              ]
+            },
+            getSchemaTpl('theme:base', {
+              classname: 'actionsControlClassName',
+              title: '操作区样式',
+              editorValueToken: '--Panel-footer',
+              hideRadius: true,
+              hideShadow: true,
+              hideMargin: true,
+              needState: false,
+              visibleOn: isWrapped
+            }),
+            {
+              title: '自定义样式',
+              body: [
+                {
+                  type: 'theme-cssCode',
+                  label: false
+                }
               ]
             },
             /** */
@@ -1198,7 +1439,8 @@ export class FormPlugin extends BasePlugin {
 
   /** 重新构建 API */
   panelFormPipeOut = async (schema: any, oldSchema: any) => {
-    const entity = schema?.api?.entity;
+    // 查看场景下，没有api，只有initApi
+    const entity = schema?.api?.entity || schema?.initApi?.entity;
 
     if (!entity || schema?.dsType !== ModelDSBuilderKey) {
       return schema;
@@ -1219,7 +1461,7 @@ export class FormPlugin extends BasePlugin {
       const updatedSchema = await builder.buildApiSchema({
         schema,
         renderer: 'form',
-        sourceKey: 'api',
+        sourceKey: DSFeatureEnum.View === schema.feat ? 'initApi' : 'api',
         feat: schema.feat ?? 'Insert',
         apiSettings: {
           diffConfig: {
@@ -1334,8 +1576,9 @@ export class FormPlugin extends BasePlugin {
     }
 
     if (!_isModelComp(schema)) {
-      /** 存量数据可能未设置过feat, 需要添加一下 */
-      if (!schema.feat) {
+      /** 每次需要纠正一下feat，有可能直接是编辑了代码的api */
+      const exactlyFeat = this.guessDSFeatFromSchema(schema);
+      if (exactlyFeat !== schema.feat) {
         shouldUpdateSchema = true;
         patchedSchema = {
           ...patchedSchema,

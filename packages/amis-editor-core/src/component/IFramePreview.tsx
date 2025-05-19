@@ -3,6 +3,7 @@ import {EditorStoreType} from '../store/editor';
 import React, {memo} from 'react';
 import {EditorManager} from '../manager';
 import Frame, {useFrame} from 'react-frame-component';
+import {SchemaRenderer} from './SchemaRenderer';
 import {
   autobind,
   closeContextMenus,
@@ -39,7 +40,7 @@ export default class IFramePreview extends React.Component<IFramePreviewProps> {
         return el.outerHTML;
       });
     styles.push(
-      `<style>body {height:auto !important;min-height:100%;display: flex;flex-direction: column;}</style>`
+      `<style>body {height:auto !important;min-height:auto;display: flex;flex-direction: column;}</style>`
     );
 
     this.initialContent = `<!DOCTYPE html><html><head>${styles.join(
@@ -92,7 +93,9 @@ export default class IFramePreview extends React.Component<IFramePreviewProps> {
 
   @autobind
   iframeContentDidMount() {
-    this.iframeRef.contentWindow?.document.body.classList.add(`is-modalOpened`);
+    const body = this.iframeRef.contentWindow?.document.body;
+    body?.classList.add('is-modalOpened');
+    body?.classList.add('ae-PreviewIFrameBody');
   }
 
   render() {
@@ -111,6 +114,7 @@ export default class IFramePreview extends React.Component<IFramePreviewProps> {
           {render(
             editable ? store.filteredSchema : store.filteredSchemaForPreview,
             {
+              globalVars: store.globalVariables,
               ...rest,
               key: editable ? 'edit-mode' : 'preview-mode',
               theme: env.theme,
@@ -121,7 +125,10 @@ export default class IFramePreview extends React.Component<IFramePreviewProps> {
             },
             {
               ...env,
-              session: `${env.session}-iframe-preview`,
+              session: `${env.session}-${
+                editable ? 'edit' : 'preview'
+              }-iframe-preview`,
+              SchemaRenderer: editable ? SchemaRenderer : undefined,
               useMobileUI: true,
               isMobile: this.isMobile,
               getModalContainer: this.getModalContainer
@@ -172,6 +179,12 @@ function InnerComponent({
       return;
     }
 
+    if (store.activeElement) {
+      // 禁用内部的点击事件
+      e.preventDefault();
+      return;
+    }
+
     if (target) {
       store.setActiveId(target.getAttribute('data-editor-id')!);
     }
@@ -189,6 +202,37 @@ function InnerComponent({
     }
   }, []);
 
+  const handleDBClick = React.useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const hostElem = target.closest(`[data-editor-id]`) as HTMLElement;
+    if (hostElem) {
+      const node = store.getNodeById(hostElem.getAttribute('data-editor-id')!);
+      if (!node) {
+        return;
+      }
+
+      const rendererInfo = node.info;
+
+      // 需要支持 :scope > xxx 语法，所以才这么写
+      let inlineElem: HTMLElement | undefined | null = null;
+      const inlineSetting = (rendererInfo.inlineEditableElements || []).find(
+        elem => {
+          inlineElem = (
+            [].slice.call(
+              hostElem.querySelectorAll(elem.match)
+            ) as Array<HTMLElement>
+          ).find(dom => dom.contains(target));
+          return !!inlineElem;
+        }
+      )!;
+
+      // 如果命中了支持内联编辑的元素，则开始内联编辑
+      if (inlineElem && inlineSetting) {
+        manager.startInlineEdit(node, inlineElem, inlineSetting, e);
+      }
+    }
+  }, []);
+
   const handeMouseOver = React.useCallback((e: MouseEvent) => {
     if (editableRef.current) {
       e.preventDefault();
@@ -196,9 +240,50 @@ function InnerComponent({
     }
   }, []);
 
+  // 禁用内部的提交事件
+  const handleSubmit = React.useCallback((e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
   const syncIframeHeight = React.useCallback(() => {
     const iframe = manager.store.getIframe()!;
-    iframe.style.cssText += `height: ${doc!.body.offsetHeight}px`;
+    iframe.style.cssText += `height: ${Math.max(
+      doc!.body.offsetHeight,
+      667
+    )}px`;
+  }, []);
+
+  const handleDragEnter = React.useCallback((e: DragEvent) => {
+    if (!editable) {
+      return;
+    }
+    e.stopPropagation();
+    manager.dnd.dragEnter(e);
+  }, []);
+
+  const handleDragLeave = React.useCallback((e: DragEvent) => {
+    if (!editable) {
+      return;
+    }
+    e.stopPropagation();
+    manager.dnd.dragLeave(e);
+  }, []);
+
+  const handleDragOver = React.useCallback((e: DragEvent) => {
+    if (!editable) {
+      return;
+    }
+    e.stopPropagation();
+    manager.dnd.dragOver(e);
+  }, []);
+
+  const handleDrop = React.useCallback((e: DragEvent) => {
+    if (!editable) {
+      return;
+    }
+    e.stopPropagation();
+    manager.dnd.drop(e);
   }, []);
 
   React.useEffect(() => {
@@ -209,7 +294,13 @@ function InnerComponent({
     layer!.addEventListener('mouseleave', handleMouseLeave);
     layer!.addEventListener('mousemove', handleMouseMove);
     layer!.addEventListener('click', handleClick, true);
+    layer!.addEventListener('dblclick', handleDBClick);
     layer!.addEventListener('mouseover', handeMouseOver);
+    layer!.addEventListener('submit', handleSubmit);
+    layer!.addEventListener('dragenter', handleDragEnter);
+    layer!.addEventListener('dragleave', handleDragLeave);
+    layer!.addEventListener('dragover', handleDragOver);
+    layer!.addEventListener('drop', handleDrop);
 
     const unSensor = resizeSensor(doc!.body, () => {
       syncIframeHeight();
@@ -222,7 +313,12 @@ function InnerComponent({
       layer!.removeEventListener('mousemove', handleMouseMove);
       layer!.removeEventListener('click', handleClick);
       layer!.removeEventListener('mouseover', handeMouseOver);
-
+      layer!.removeEventListener('dblclick', handleDBClick);
+      layer!.removeEventListener('submit', handleSubmit);
+      layer!.removeEventListener('dragenter', handleDragEnter);
+      layer!.removeEventListener('dragleave', handleDragLeave);
+      layer!.removeEventListener('dragover', handleDragOver);
+      layer!.removeEventListener('drop', handleDrop);
       store.setDoc(document);
       unSensor();
     };
